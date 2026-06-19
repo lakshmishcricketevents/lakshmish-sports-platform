@@ -98,6 +98,13 @@ function KabaddiBroadcastScoreboardContent() {
   const [doOrDie, setDoOrDie] = useState(false);
   const [superTackle, setSuperTackle] = useState(false);
 
+  // Local state for Match Timer & refs
+  const [timeRemaining, setTimeRemaining] = useState(2400);
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  const isRaidTimerOwnerRef = useRef(false);
+  const isMatchTimerOwnerRef = useRef(false);
+
   // Audio & Volume System
   const [volume, setVolume] = useState<'mute' | 'low' | 'medium' | 'high'>('medium');
   const raidAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -138,8 +145,7 @@ function KabaddiBroadcastScoreboardContent() {
     if (!audio || !match || !match.kabaddiState) return;
 
     const ks = match.kabaddiState;
-    const playState = ks.raidAudioPlayState || (ks.raidTimerRunning ? 'playing' : 'stopped');
-    const currentRaidTime = ks.raidTime !== undefined ? ks.raidTime : 30;
+    const playState = ks.raidAudioPlayState || (raidRunning ? 'playing' : 'stopped');
 
     // Apply Volume
     if (volume === 'mute') {
@@ -152,8 +158,8 @@ function KabaddiBroadcastScoreboardContent() {
       audio.volume = 1.0;
     }
 
-    if (playState === 'playing' && currentRaidTime > 0) {
-      const targetTime = 30 - currentRaidTime;
+    if (playState === 'playing' && raidTime > 0) {
+      const targetTime = 30 - raidTime;
       if (audio.paused) {
         audio.currentTime = targetTime >= 0 ? targetTime : 0;
         audio.play().catch(e => console.warn('Audio play blocked:', e));
@@ -166,7 +172,7 @@ function KabaddiBroadcastScoreboardContent() {
       if (!audio.paused) {
         audio.pause();
       }
-      const targetTime = 30 - currentRaidTime;
+      const targetTime = 30 - raidTime;
       if (Math.abs(audio.currentTime - targetTime) > 1.5) {
         audio.currentTime = targetTime >= 0 ? targetTime : 0;
       }
@@ -177,7 +183,7 @@ function KabaddiBroadcastScoreboardContent() {
       }
       audio.currentTime = 0;
     }
-  }, [match?.kabaddiState?.raidAudioPlayState, match?.kabaddiState?.raidTime, match?.kabaddiState?.raidTimerRunning, volume]);
+  }, [match?.kabaddiState?.raidAudioPlayState, raidRunning, raidTime, volume]);
 
   // Local inputs for edit
   const [kannadaNameA, setKannadaNameA] = useState('');
@@ -203,17 +209,6 @@ function KabaddiBroadcastScoreboardContent() {
 
   const raidIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const matchIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const raidRunningRef = useRef(false);
-  const raidTimeRef = useRef(30);
-
-  useEffect(() => {
-    raidRunningRef.current = raidRunning;
-  }, [raidRunning]);
-
-  useEffect(() => {
-    raidTimeRef.current = raidTime;
-  }, [raidTime]);
 
   // Load Initial Data
   const loadMatchData = async () => {
@@ -259,21 +254,32 @@ function KabaddiBroadcastScoreboardContent() {
       setMatch(data);
       matchRef.current = data;
 
-      // Sync raid state only if not currently running locally or if database is way off (reset)
+      // Sync states from database if not local owner
       if (data.kabaddiState) {
-        if (data.kabaddiState.raidTimerRunning !== undefined) {
-          setRaidRunning(data.kabaddiState.raidTimerRunning);
+        const ks = data.kabaddiState;
+        
+        // Sync raid clock if not local owner
+        if (!isRaidTimerOwnerRef.current) {
+          setRaidRunning(!!ks.raidTimerRunning);
+          setDoOrDie(!!ks.doOrDie);
+          setSuperTackle(!!ks.superTackle);
+          setRaidTime(prev => {
+            if (!ks.raidTimerRunning || ks.raidTime === undefined || Math.abs(prev - ks.raidTime) > 3) {
+              return ks.raidTime !== undefined ? ks.raidTime : 30;
+            }
+            return prev;
+          });
         }
-        if (data.kabaddiState.doOrDie !== undefined) {
-          setDoOrDie(data.kabaddiState.doOrDie);
-        }
-        if (data.kabaddiState.superTackle !== undefined) {
-          setSuperTackle(data.kabaddiState.superTackle);
-        }
-        if (data.kabaddiState.raidTime !== undefined) {
-          if (!raidRunningRef.current || Math.abs(raidTimeRef.current - data.kabaddiState.raidTime) > 3) {
-            setRaidTime(data.kabaddiState.raidTime);
-          }
+
+        // Sync match clock if not local owner
+        if (!isMatchTimerOwnerRef.current) {
+          setTimerRunning(!!ks.timerRunning);
+          setTimeRemaining(prev => {
+            if (!ks.timerRunning || Math.abs(prev - ks.timeRemaining) > 5) {
+              return ks.timeRemaining;
+            }
+            return prev;
+          });
         }
       }
 
@@ -291,22 +297,24 @@ function KabaddiBroadcastScoreboardContent() {
 
       setLogoA(data.teamA?.logo || '/mascot_lion.png');
       setLogoB(data.teamB?.logo || '/mascot_bull.png');
-
-      // Load Tournament Details
-      if (data.tournamentId) {
-        const tRes = await fetch('/api/tournaments');
-        if (tRes.ok) {
-          const tournaments = await tRes.json();
-          const t = tournaments.find((x: any) => x.id === data.tournamentId);
-          if (t?.name) setTournamentName(t.name);
-        }
-      }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch tournament details only when tournamentId is resolved
+  useEffect(() => {
+    if (match?.tournamentId) {
+      fetch('/api/tournaments')
+        .then(r => r.json())
+        .then(tournaments => {
+          const t = tournaments.find((x: any) => x.id === match.tournamentId);
+          if (t?.name) setTournamentName(t.name);
+        }).catch(e => console.warn(e));
+    }
+  }, [match?.tournamentId]);
 
   useEffect(() => {
     if (!matchId) return;
@@ -418,12 +426,15 @@ function KabaddiBroadcastScoreboardContent() {
           if (prev <= 1) {
             setRaidRunning(false);
             clearInterval(raidIntervalRef.current!);
-            postRaidState({ raidTime: 0, raidRunning: false });
             
-            // Auto-reset to 30 after 1.5 seconds delay
-            setTimeout(() => {
-              postRaidState({ raidTime: 30, raidRunning: false, doOrDie: false, superTackle: false });
-            }, 1500);
+            if (isRaidTimerOwnerRef.current) {
+              postRaidState({ raidTime: 0, raidRunning: false });
+              
+              // Auto-reset to 30 after 1.5 seconds delay
+              setTimeout(() => {
+                postRaidState({ raidTime: 30, raidRunning: false, doOrDie: false, superTackle: false });
+              }, 1500);
+            }
 
             return 0;
           }
@@ -435,8 +446,8 @@ function KabaddiBroadcastScoreboardContent() {
             triggerAudioAlert('tick');
           }
 
-          // Sync every 5 seconds to keep the TV broadcast screen aligned
-          if (nextTime % 5 === 0) {
+          // Sync every 5 seconds to keep the TV broadcast screen aligned if we are the owner
+          if (isRaidTimerOwnerRef.current && nextTime % 5 === 0) {
             fetch(`/api/matches/${matchId}?token=${match?.controlToken}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -462,7 +473,7 @@ function KabaddiBroadcastScoreboardContent() {
     return () => {
       if (raidIntervalRef.current) clearInterval(raidIntervalRef.current);
     };
-  }, [raidRunning, doOrDie, superTackle, matchId]);
+  }, [raidRunning, doOrDie, superTackle, matchId, match?.controlToken]);
 
   // Trigger buzzer when raidTime hits 0 (reaches completion)
   useEffect(() => {
@@ -473,27 +484,24 @@ function KabaddiBroadcastScoreboardContent() {
 
   // Match Timer interval simulation (Runs locally when timerRunning is true)
   useEffect(() => {
-    if (match?.kabaddiState?.timerRunning) {
+    if (timerRunning) {
       matchIntervalRef.current = setInterval(() => {
-        setMatch(prev => {
-          if (!prev || !prev.kabaddiState) return prev;
-          const time = prev.kabaddiState.timeRemaining - 1;
-          if (time <= 0) {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setTimerRunning(false);
             clearInterval(matchIntervalRef.current!);
-            postTimerUpdate(0, false);
-            return {
-              ...prev,
-              kabaddiState: { ...prev.kabaddiState, timeRemaining: 0, timerRunning: false }
-            };
+            if (isMatchTimerOwnerRef.current) {
+              postTimerUpdate(0, false);
+            }
+            return 0;
           }
-          // Sync with server every 10 seconds
-          if (time % 10 === 0) {
-            postTimerUpdate(time, true);
+          const nextTime = prev - 1;
+          
+          // Sync with server every 10 seconds if we are the owner
+          if (isMatchTimerOwnerRef.current && nextTime % 10 === 0) {
+            postTimerUpdate(nextTime, true);
           }
-          return {
-            ...prev,
-            kabaddiState: { ...prev.kabaddiState, timeRemaining: time }
-          };
+          return nextTime;
         });
       }, 1000);
     } else {
@@ -503,7 +511,7 @@ function KabaddiBroadcastScoreboardContent() {
     return () => {
       if (matchIntervalRef.current) clearInterval(matchIntervalRef.current);
     };
-  }, [match?.kabaddiState?.timerRunning]);
+  }, [timerRunning, matchId]);
 
   // Server API posting helper
   const postTimerUpdate = async (timeRemaining: number, timerRunning: boolean) => {
@@ -523,6 +531,7 @@ function KabaddiBroadcastScoreboardContent() {
 
   async function postRaidState(updates: { raidTime?: number; raidRunning?: boolean; doOrDie?: boolean; superTackle?: boolean }) {
     if (!match) return;
+    isRaidTimerOwnerRef.current = true;
     const nextRaidTime = updates.raidTime !== undefined ? updates.raidTime : raidTime;
     const nextRaidRunning = updates.raidRunning !== undefined ? updates.raidRunning : raidRunning;
     const nextDoOrDie = updates.doOrDie !== undefined ? updates.doOrDie : doOrDie;
@@ -593,6 +602,7 @@ function KabaddiBroadcastScoreboardContent() {
       });
       if (res.ok) {
         // Reset raid timer on successful raid score event
+        isRaidTimerOwnerRef.current = true;
         setRaidTime(30);
         setRaidRunning(false);
         setDoOrDie(false);
@@ -605,22 +615,19 @@ function KabaddiBroadcastScoreboardContent() {
   };
 
   const toggleMatchTimer = async () => {
-    if (!match || !match.kabaddiState) return;
-    const nextRunning = !match.kabaddiState.timerRunning;
-    await postTimerUpdate(match.kabaddiState.timeRemaining, nextRunning);
-    setMatch(prev => {
-      if (!prev || !prev.kabaddiState) return prev;
-      return {
-        ...prev,
-        kabaddiState: { ...prev.kabaddiState, timerRunning: nextRunning }
-      };
-    });
+    if (!match) return;
+    isMatchTimerOwnerRef.current = true;
+    const nextRunning = !timerRunning;
+    setTimerRunning(nextRunning);
+    await postTimerUpdate(timeRemaining, nextRunning);
   };
 
   const resetMatchTimer = async () => {
-    if (!match || !match.kabaddiState) return;
+    if (!match) return;
+    isMatchTimerOwnerRef.current = true;
+    setTimerRunning(false);
+    setTimeRemaining(2400);
     await postTimerUpdate(2400, false);
-    loadMatchData();
   };
 
   const changeHalf = async (halfVal: 1 | 2) => {
@@ -630,6 +637,10 @@ function KabaddiBroadcastScoreboardContent() {
       const firstHalfDuration = ks.firstHalfDuration !== undefined ? ks.firstHalfDuration : 1200;
       const secondHalfDuration = ks.secondHalfDuration !== undefined ? ks.secondHalfDuration : 1200;
       const nextTimeRemaining = halfVal === 1 ? firstHalfDuration : secondHalfDuration;
+
+      isMatchTimerOwnerRef.current = true;
+      setTimerRunning(false);
+      setTimeRemaining(nextTimeRemaining);
 
       const payload = {
         kabaddiState: {
@@ -652,6 +663,8 @@ function KabaddiBroadcastScoreboardContent() {
 
   const undoAction = async () => {
     try {
+      isRaidTimerOwnerRef.current = false;
+      isMatchTimerOwnerRef.current = false;
       const res = await fetch(`/api/matches/${matchId}?token=${match?.controlToken}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1063,8 +1076,8 @@ function KabaddiBroadcastScoreboardContent() {
             <div className="bg-black/80 border border-gold-500/35 px-6 py-2.5 rounded-2xl shadow-2xl min-w-[170px] text-center">
               <span className="text-[9px] text-gold-450 font-black uppercase tracking-widest block mb-0.5">MATCH TIME</span>
               <span className="text-3xl sm:text-4xl lg:text-[2.75rem] font-black font-mono text-white tracking-widest block leading-none text-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
-                {Math.floor(kState.timeRemaining / 60).toString().padStart(2, '0')}:
-                {(kState.timeRemaining % 60).toString().padStart(2, '0')}
+                {Math.floor(timeRemaining / 60).toString().padStart(2, '0')}:
+                {(timeRemaining % 60).toString().padStart(2, '0')}
               </span>
             </div>
           </div>
@@ -1120,13 +1133,13 @@ function KabaddiBroadcastScoreboardContent() {
             <button
               onClick={toggleMatchTimer}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center space-x-1 ${
-                match?.kabaddiState?.timerRunning
+                timerRunning
                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                   : 'bg-emerald-500/25 text-emerald-450 border border-emerald-500/35'
               }`}
             >
-              {match?.kabaddiState?.timerRunning ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-              <span>{match?.kabaddiState?.timerRunning ? 'Pause Match' : 'Start Match'}</span>
+              {timerRunning ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+              <span>{timerRunning ? 'Pause Match' : 'Start Match'}</span>
             </button>
             <button
               onClick={resetMatchTimer}
@@ -1451,13 +1464,22 @@ function KabaddiBroadcastScoreboardContent() {
                 onClick={() => {
                   if (confirm('Are you sure you want to reset scores?')) {
                     // Call reset scoring API or post score 0
+                    isRaidTimerOwnerRef.current = true;
+                    isMatchTimerOwnerRef.current = true;
+                    setRaidTime(30);
+                    setRaidRunning(false);
+                    setDoOrDie(false);
+                    setSuperTackle(false);
+                    setTimerRunning(false);
+                    setTimeRemaining(2400);
                     fetch(`/api/matches/${matchId}?token=${match?.controlToken}`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ action: 'update_general', payload: { kabaddiState: {
                         scoreA: 0, scoreB: 0, raidPointsA: 0, tacklePointsA: 0, allOutPointsA: 0, extraPointsA: 0,
                         raidPointsB: 0, tacklePointsB: 0, allOutPointsB: 0, extraPointsB: 0,
-                        timeRemaining: 2400, half: 1, timerRunning: false
+                        timeRemaining: 2400, half: 1, timerRunning: false,
+                        raidTime: 30, raidTimerRunning: false, doOrDie: false, superTackle: false
                       }, kabaddiActions: [] } })
                     }).then(() => loadMatchData());
                   }

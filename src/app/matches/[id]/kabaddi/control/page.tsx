@@ -72,6 +72,11 @@ function MobileKabaddiControllerContent() {
   const [raidRunning, setRaidRunning] = useState(false);
   const [doOrDie, setDoOrDie] = useState(false);
   const [superTackle, setSuperTackle] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(2400);
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  const isRaidTimerOwnerRef = useRef(false);
+  const isMatchTimerOwnerRef = useRef(false);
 
   // Audio & Volume System
   const [volume, setVolume] = useState<'mute' | 'low' | 'medium' | 'high'>('mute');
@@ -106,6 +111,7 @@ function MobileKabaddiControllerContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const raidIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const matchIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load Match Data from Server
   const loadMatchData = async () => {
@@ -124,23 +130,27 @@ function MobileKabaddiControllerContent() {
         setDoOrDie(!!ks.doOrDie);
         setSuperTackle(!!ks.superTackle);
 
-        // Sync raid clock
-        setRaidRunning(!!ks.raidTimerRunning);
-        setRaidTime(prev => {
-          if (!ks.raidTimerRunning || ks.raidTime === undefined || Math.abs(prev - ks.raidTime) > 3) {
-            return ks.raidTime !== undefined ? ks.raidTime : 30;
-          }
-          return prev;
-        });
-      }
+        // Sync raid clock if not local owner
+        if (!isRaidTimerOwnerRef.current) {
+          setRaidRunning(!!ks.raidTimerRunning);
+          setRaidTime(prev => {
+            if (!ks.raidTimerRunning || ks.raidTime === undefined || Math.abs(prev - ks.raidTime) > 3) {
+              return ks.raidTime !== undefined ? ks.raidTime : 30;
+            }
+            return prev;
+          });
+        }
 
-      if (data.tournamentId) {
-        fetch('/api/tournaments')
-          .then(r => r.json())
-          .then(tournaments => {
-            const t = tournaments.find((x: any) => x.id === data.tournamentId);
-            if (t?.name) setTourName(t.name);
-          }).catch(e => console.warn(e));
+        // Sync match clock if not local owner
+        if (!isMatchTimerOwnerRef.current) {
+          setTimerRunning(!!ks.timerRunning);
+          setTimeRemaining(prev => {
+            if (!ks.timerRunning || Math.abs(prev - ks.timeRemaining) > 5) {
+              return ks.timeRemaining;
+            }
+            return prev;
+          });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -149,6 +159,18 @@ function MobileKabaddiControllerContent() {
       setLoading(false);
     }
   };
+
+  // Fetch tournament details only when tournamentId is resolved
+  useEffect(() => {
+    if (match?.tournamentId) {
+      fetch('/api/tournaments')
+        .then(r => r.json())
+        .then(tournaments => {
+          const t = tournaments.find((x: any) => x.id === match.tournamentId);
+          if (t?.name) setTourName(t.name);
+        }).catch(e => console.warn(e));
+    }
+  }, [match?.tournamentId]);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -232,45 +254,48 @@ function MobileKabaddiControllerContent() {
           if (prev <= 1) {
             setRaidRunning(false);
             clearInterval(raidIntervalRef.current!);
-            // Sync final state to database (0 seconds) to trigger buzzer on other screens
-            fetch(`/api/matches/${matchId}?token=${token}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'kabaddi_raid_state',
-                payload: {
-                  raidTime: 0,
-                  raidTimerRunning: false,
-                  doOrDie,
-                  superTackle
-                }
-              })
-            }).catch(e => console.warn('Failed to sync raid time end:', e));
-
-            // Then automatically reset to 30 seconds after 1.5 seconds delay so it is ready for the next raid
-            setTimeout(() => {
+            
+            if (isRaidTimerOwnerRef.current) {
+              // Sync final state to database (0 seconds) to trigger buzzer on other screens
               fetch(`/api/matches/${matchId}?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   action: 'kabaddi_raid_state',
                   payload: {
-                    raidTime: 30,
+                    raidTime: 0,
                     raidTimerRunning: false,
-                    doOrDie: false,
-                    superTackle: false
+                    doOrDie,
+                    superTackle
                   }
                 })
-              }).catch(e => console.warn('Failed to auto-reset raid time:', e));
-            }, 1500);
+              }).catch(e => console.warn('Failed to sync raid time end:', e));
+
+              // Then automatically reset to 30 seconds after 1.5 seconds delay so it is ready for the next raid
+              setTimeout(() => {
+                fetch(`/api/matches/${matchId}?token=${token}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    action: 'kabaddi_raid_state',
+                    payload: {
+                      raidTime: 30,
+                      raidTimerRunning: false,
+                      doOrDie: false,
+                      superTackle: false
+                    }
+                  })
+                }).catch(e => console.warn('Failed to auto-reset raid time:', e));
+              }, 1500);
+            }
 
             return 0;
           }
 
           const nextTime = prev - 1;
 
-          // Sync every 5 seconds to keep other screens aligned
-          if (nextTime % 5 === 0) {
+          // Sync every 5 seconds to keep other screens aligned if we are the owner
+          if (isRaidTimerOwnerRef.current && nextTime % 5 === 0) {
             fetch(`/api/matches/${matchId}?token=${token}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -296,6 +321,41 @@ function MobileKabaddiControllerContent() {
       if (raidIntervalRef.current) clearInterval(raidIntervalRef.current);
     };
   }, [raidRunning, doOrDie, superTackle, matchId, token]);
+
+  // Local Match Timer Countdown
+  useEffect(() => {
+    if (timerRunning) {
+      matchIntervalRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setTimerRunning(false);
+            clearInterval(matchIntervalRef.current!);
+            if (isMatchTimerOwnerRef.current) {
+              postAction('kabaddi_timer', { timeRemaining: 0, timerRunning: false });
+            }
+            return 0;
+          }
+          const nextTime = prev - 1;
+          if (isMatchTimerOwnerRef.current && nextTime % 10 === 0) {
+            fetch(`/api/matches/${matchId}?token=${token}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'kabaddi_timer',
+                payload: { timeRemaining: nextTime, timerRunning: true }
+              })
+            }).catch(e => console.warn(e));
+          }
+          return nextTime;
+        });
+      }, 1000);
+    } else {
+      if (matchIntervalRef.current) clearInterval(matchIntervalRef.current);
+    }
+    return () => {
+      if (matchIntervalRef.current) clearInterval(matchIntervalRef.current);
+    };
+  }, [timerRunning, matchId, token]);
 
   // Call Server Action
   const postAction = async (action: string, payload: any) => {
@@ -387,12 +447,19 @@ function MobileKabaddiControllerContent() {
       const currentMatchMinutes = Math.floor(ks.timeRemaining / 60);
       const currentMatchSeconds = ks.timeRemaining % 60;
       
-      let timeRemaining = ks.timeRemaining;
+      let nextTimeRemaining = ks.timeRemaining;
       if (Number(editMatchMinutes) !== currentMatchMinutes || Number(editMatchSeconds) !== currentMatchSeconds) {
-        timeRemaining = (Number(editMatchMinutes) || 0) * 60 + (Number(editMatchSeconds) || 0);
+        nextTimeRemaining = (Number(editMatchMinutes) || 0) * 60 + (Number(editMatchSeconds) || 0);
       } else if (editHalf !== ks.half) {
-        timeRemaining = editHalf === 1 ? firstHalfDuration : secondHalfDuration;
+        nextTimeRemaining = editHalf === 1 ? firstHalfDuration : secondHalfDuration;
       }
+
+      isMatchTimerOwnerRef.current = true;
+      isRaidTimerOwnerRef.current = true;
+      setTimerRunning(false);
+      setTimeRemaining(nextTimeRemaining);
+      setRaidRunning(false);
+      setRaidTime(Number(editRaidTime) || 30);
 
       const payload = {
         tournamentName: editTourName,
@@ -410,7 +477,7 @@ function MobileKabaddiControllerContent() {
           ...match.kabaddiState,
           scoreA: Number(editScoreA) || 0,
           scoreB: Number(editScoreB) || 0,
-          timeRemaining: timeRemaining,
+          timeRemaining: nextTimeRemaining,
           half: editHalf,
           raidTime: Number(editRaidTime) || 30,
           doOrDie: editDoOrDie,
@@ -437,6 +504,13 @@ function MobileKabaddiControllerContent() {
     setIsSaving(true);
     setErrorMsg('');
     try {
+      isRaidTimerOwnerRef.current = true;
+      isMatchTimerOwnerRef.current = true;
+      setRaidRunning(false);
+      setRaidTime(30);
+      setTimerRunning(false);
+      setTimeRemaining(2400);
+
       const payload = {
         kabaddiState: {
           ...match?.kabaddiState,
@@ -479,6 +553,7 @@ function MobileKabaddiControllerContent() {
   };
 
   const handleRaidState = (updates: { raidTime?: number; raidRunning?: boolean; doOrDie?: boolean; superTackle?: boolean }) => {
+    isRaidTimerOwnerRef.current = true;
     const nextRaidTime = updates.raidTime !== undefined ? updates.raidTime : raidTime;
     const nextRaidRunning = updates.raidRunning !== undefined ? updates.raidRunning : raidRunning;
     const nextDoOrDie = updates.doOrDie !== undefined ? updates.doOrDie : doOrDie;
@@ -499,20 +574,26 @@ function MobileKabaddiControllerContent() {
 
   const handleMatchTimerToggle = () => {
     if (!match || !match.kabaddiState) return;
-    const nextRunning = !match.kabaddiState.timerRunning;
+    isMatchTimerOwnerRef.current = true;
+    const nextRunning = !timerRunning;
+    setTimerRunning(nextRunning);
     postAction('kabaddi_timer', {
-      timeRemaining: match.kabaddiState.timeRemaining,
+      timeRemaining: timeRemaining,
       timerRunning: nextRunning
     });
   };
 
   const handleSwitchPeriod = () => {
     if (!match || !match.kabaddiState) return;
+    isMatchTimerOwnerRef.current = true;
     const nextHalf = match.kabaddiState.half === 1 ? 2 : 1;
     const ks = match.kabaddiState;
     const firstHalfDuration = ks.firstHalfDuration !== undefined ? ks.firstHalfDuration : 1200;
     const secondHalfDuration = ks.secondHalfDuration !== undefined ? ks.secondHalfDuration : 1200;
     const nextTimeRemaining = nextHalf === 1 ? firstHalfDuration : secondHalfDuration;
+
+    setTimerRunning(false);
+    setTimeRemaining(nextTimeRemaining);
 
     postAction('update_general', {
       kabaddiState: {

@@ -198,6 +198,36 @@ We have successfully integrated a fully synchronized, high-fidelity **Kabaddi Ra
 6. **Local Synthesized Buzzer & Beeps**: A high-impact buzzer sound is synthesized locally using the browser's Web Audio API. Warning alerts beep when less than 5 seconds remain. The buzzer plays reliably using a React `useEffect` hook monitoring `raidTime === 0`, ensuring exactly one clean buzzer execution across clients.
 7. **No Dual-Audio/Chanting Clutter**: Completely removed the experimental AI text-to-speech chanting loop ("kabaddi kabaddi...") to avoid interference with the premium 30-second raid song audio stream.
 8. **Raid Clock Sync Correction**: Added periodic server database synchronization (every 5 seconds) to the Mobile Controller's local countdown interval. This ensures that the server match details stay updated during a raid even if only the Mobile Controller is open, preventing the timer from resetting or jumping back to 30 seconds during slow-polling events.
+
+---
+
+## 10. Laptop Admin Dashboard Refactoring & Timer Synchronization Stabilization (Latest Updates)
+
+We have refactored the Laptop Admin Dashboard (`page.tsx`) to implement the decoupled local state and ownership validation patterns, fully resolving render loops, sync conflicts, and network overhead.
+
+### 🌟 Key Enhancements & Stabilization Measures
+1. **Decoupled Local Timer States**: Match timer states (`timeRemaining` and `timerRunning`) are now decoupled from the main `match` object into local React states, matching the Mobile Controller's structure. This prevents high-frequency updates to the `match` state every second, eliminating rendering cascades and HMR loops.
+2. **State Ownership Refs**: Introduced `isRaidTimerOwnerRef` and `isMatchTimerOwnerRef` on the Admin console. The local clocks only synchronize with the database if the screen is NOT the active owner of that clock. If a screen initiates a timer start/pause/reset, it claims ownership.
+3. **Double-Write Conflict Storm Prevention**: Ticks and sync updates are only POSTed to Supabase when the screen is the active owner. This prevents a "conflict storm" where the Admin Console and the Mobile Controller would concurrently tick and write clock states to the server, solving the unstable database loops.
+4. **Optimized Tournament Data Fetching**: Moved the tournament details fetch API call out of the high-frequency match loading loop. It now executes only once when the page loads or when `match.tournamentId` changes, significantly reducing server requests and network activity.
+5. **Autoplay-Safe Local Buzzer**: When the raid countdown reaches `0`, a local synthesizer triggers a high-impact buzzer.
+6. **Smooth Local/DB Alignment**: When not the owner, the local clocks tick down smoothly with 1s resolution for UI fluidity, and automatically align with the database state if drift exceeds threshold metrics (3 seconds for raid time, 5 seconds for match time).
+7. **Production Grade Build**: Verified that `npx tsc --noEmit` and `npm run build` pass cleanly under Next.js Turbopack, guaranteeing type-safety and bundle compilation stability.
 9. **Automatic 30-Second Raid Reset**: When the raid clock countdown completes (reaches 0), it automatically triggers the buzzer, pauses, and then resets the countdown to 30 seconds after a 1.5-second delay, so the next raid is immediately ready.
 10. **Mobile Audio Disabled**: Removed all HTML5 Audio and Web Audio synthesizer elements from the Mobile Controller interface to prevent loud audio or buzzer interference at the scorer's table.
+
+---
+
+## 11. Premium Sports-Tech Homepage Redesign (Latest Updates)
+
+We have completely redesigned the platform's home page (`src/app/page.tsx`) to match the premium, high-impact aesthetic of elite sports platforms like the Indian Premier League (IPL), Pro Kabaddi League (PKL), and Dream11.
+
+### 🌟 Key Redesign & Visual Components
+1. **Live Match Ticker Header**: Built a horizontal scrollable ticker at the top of the viewport. Renders compact, live-updating mini-scorecards for all active fixtures (runs/wickets, targets, overs, active halves, and live scores).
+2. **Cinematic Hero Arena**: Styled a large landing banner using the professional stadium background integrated with a dark overlay, floating golden trophy illustration, spotlight sweep animations, and bold typography.
+3. **Dashboard Metrics Counters**: Displayed 4 golden-themed glassmorphism stats widgets summarizing tournaments, live matches, players, and concluded cups, complete with micro-interaction hover transforms.
+4. **Professional Match Cards**: Redesigned match summary nodes inside the match center, featuring circular team logo badges, bilingual Kannada/English team labels, and visual highlight markers (Target Runs tracker for Cricket, active Period & Clock details for Kabaddi).
+5. **Infinite Sponsors Carousel**: Replaced static logo blocks with an animated scrolling track. Loops sponsor badges horizontally using pure CSS keyframes with cursor pause integration.
+6. **Highlights Reel**: Added a curated "Broadcast Highlights" section displaying video-style cards, play overlays, view/time badges, and descriptions for match events.
+7. **Bilingual Standings & Leaderboards**: Renders MVP Raiders, Wicket Takers, and Batsmen statistics alongside tournament standings in organized glass cards, providing a complete tournament center layout.
 

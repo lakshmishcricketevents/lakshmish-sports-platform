@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Match, Tournament, Sponsor, Player } from '@/lib/db';
-import { Play, Calendar, CheckCircle2, TrendingUp, Trophy, Users, Award, Shield } from 'lucide-react';
+import { Play, Calendar, CheckCircle2, Trophy, Users, Award, Shield, ChevronRight, Zap, Radio, CheckSquare } from 'lucide-react';
 
 export default function Dashboard() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -13,7 +13,6 @@ export default function Dashboard() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'live' | 'upcoming' | 'completed'>('live');
 
   // Real-time polling
   useEffect(() => {
@@ -43,226 +42,153 @@ export default function Dashboard() {
   }, []);
 
   const liveMatches = matches.filter(m => m.status === 'live');
-  const upcomingMatches = matches.filter(m => m.status === 'upcoming');
-  const completedMatches = matches.filter(m => m.status === 'completed');
 
-  const filteredMatches = 
-    activeTab === 'live' ? liveMatches :
-    activeTab === 'upcoming' ? upcomingMatches : completedMatches;
+  // Stats for categories
+  const cricketMatches = matches.filter(m => m.sport === 'cricket');
+  const cricketTeams = tournaments.filter(t => t.sport === 'cricket').reduce((acc, t) => acc + (t.teams?.length || 0), 0);
+  const cricketPlayers = players.filter(p => p.stats?.cricket);
+  const cricketTournaments = tournaments.filter(t => t.sport === 'cricket');
 
-  // Stats calculation
-  const totalTournaments = tournaments.length;
-  const liveCount = liveMatches.length;
-  const completedCount = completedMatches.length;
-  const totalPlayersCount = players.length;
+  const kabaddiMatches = matches.filter(m => m.sport === 'kabaddi');
+  const kabaddiTeams = tournaments.filter(t => t.sport === 'kabaddi').reduce((acc, t) => acc + (t.teams?.length || 0), 0);
+  const kabaddiPlayers = players.filter(p => p.stats?.kabaddi);
+  const kabaddiTournaments = tournaments.filter(t => t.sport === 'kabaddi');
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-brand-navy text-white">
       <Navbar />
 
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         
-        {/* Banner Section */}
-        <div className="relative overflow-hidden rounded-2xl glass-panel glow-gold border border-gold-500/30 p-6 sm:p-10 mb-8 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-gold-950/40 via-dark-950 to-dark-950">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-gold-500/10 rounded-full blur-3xl" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gold-500/10 border border-gold-500/30 rounded-full text-gold-400 text-xs font-semibold mb-4 uppercase tracking-wider">
-              <Award className="h-4.5 w-4.5" />
-              <span>Premium Live Sports Experience</span>
+        {/* 1. HERO SECTION */}
+        <div className="relative overflow-hidden rounded-3xl border border-purple-500/10 p-8 sm:p-14 bg-gradient-to-br from-dark-900 via-dark-950 to-[#0e122b] shadow-2xl">
+          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl" />
+          
+          <div className="relative z-10 max-w-3xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400 text-[10px] font-black uppercase tracking-wider mb-5">
+              <Award className="h-4 w-4" />
+              <span>Lakshmish Sports Hub</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-3">
-              LAKSHMISH <span className="gold-gradient-text">CRICKET EVENTS</span>
+            
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white mb-4 uppercase leading-none">
+              Lakshmish <span className="purple-gradient-text">Cricket Events</span>
             </h1>
-            <p className="text-sm sm:text-base text-dark-300 mb-6 leading-relaxed">
-              Experience local sports tournaments with the intensity of the IPL. Featuring real-time ball-by-ball scoreboards, live player bidding auctions, pro kabaddi statistics, and dynamic OBS overlays.
+            
+            <h2 className="text-lg sm:text-2xl font-bold text-slate-300 mb-5 leading-normal">
+              Karnataka's Premier Sports Broadcasting Platform
+            </h2>
+            
+            <p className="text-xs sm:text-sm text-dark-300 mb-8 leading-relaxed max-w-xl">
+              Experience local sports tournaments with state-of-the-art live scoreboards, match telemetry, and team statistics. Track live feeds for cricket run rates and Kabaddi countdowns cleanly on all mobile screens.
             </p>
+            
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/tournaments"
-                className="gold-gradient-bg hover:opacity-90 text-dark-950 px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-gold-500/20 transition-all"
+                href="/cricket"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white px-7 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all transform active:scale-95 shadow-lg shadow-purple-500/20 flex items-center space-x-2"
               >
-                Explore Tournaments
+                <span>Cricket Arena</span>
+                <ChevronRight className="h-4 w-4" />
               </Link>
               <Link
-                href="/auction"
-                className="bg-dark-900 border border-gold-500/30 hover:border-gold-500/60 text-gold-400 px-6 py-2.5 rounded-lg text-sm font-bold transition-all"
+                href="/kabaddi"
+                className="bg-dark-900 border border-purple-500/25 hover:border-purple-500/50 text-purple-400 px-7 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all transform active:scale-95 flex items-center space-x-2"
               >
-                Enter Auction Hub
+                <span>Kabaddi Arena</span>
+                <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="glass-panel p-4 rounded-xl flex items-center space-x-4">
-            <div className="p-3 bg-gold-500/10 rounded-lg text-gold-400">
-              <Trophy className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{totalTournaments}</p>
-              <p className="text-xs text-dark-400 uppercase tracking-wider font-semibold">Tournaments</p>
-            </div>
-          </div>
-
-          <div className="glass-panel p-4 rounded-xl flex items-center space-x-4">
-            <div className="p-3 bg-red-500/10 rounded-lg text-red-400">
-              <Play className="h-6 w-6 animate-pulse" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{liveCount}</p>
-              <p className="text-xs text-dark-400 uppercase tracking-wider font-semibold">Live Matches</p>
-            </div>
-          </div>
-
-          <div className="glass-panel p-4 rounded-xl flex items-center space-x-4">
-            <div className="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
-              <CheckCircle2 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{completedCount}</p>
-              <p className="text-xs text-dark-400 uppercase tracking-wider font-semibold">Completed</p>
-            </div>
-          </div>
-
-          <div className="glass-panel p-4 rounded-xl flex items-center space-x-4">
-            <div className="p-3 bg-indigo-500/10 rounded-lg text-indigo-400">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{totalPlayersCount}</p>
-              <p className="text-xs text-dark-400 uppercase tracking-wider font-semibold">Players</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Match Center */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gold-500/10 pb-4 mb-6 gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Play className="h-5 w-5 text-gold-500" />
-                <span>Match Center</span>
-              </h2>
-              <p className="text-xs text-dark-400 mt-0.5">Real-time score updates from active events</p>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex space-x-2 bg-dark-900/60 p-1 rounded-lg border border-gold-500/15">
-              {(['live', 'upcoming', 'completed'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all ${
-                    activeTab === tab
-                      ? 'gold-gradient-bg text-dark-950 shadow-md'
-                      : 'text-dark-400 hover:text-white hover:bg-dark-800/55'
-                  }`}
-                >
-                  {tab} {tab === 'live' && liveCount > 0 && <span className="ml-1 px-1.5 py-0.2 bg-red-500 text-white rounded-full text-[9px] animate-bounce">{liveCount}</span>}
-                </button>
-              ))}
-            </div>
+        {/* 2. LIVE NOW SECTION */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 border-b border-dark-850 pb-3">
+            <span className="flex items-center space-x-1.5 bg-red-950/30 border border-red-500/30 px-2.5 py-0.5 rounded-full text-red-500 text-[10px] font-black uppercase animate-pulse">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+              <span>LIVE NOW</span>
+            </span>
+            <p className="text-xs text-dark-400 font-bold uppercase tracking-wider">Matches Currently In Play</p>
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gold-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-              <p className="mt-4 text-sm text-dark-400">Loading scoring console data...</p>
+            <div className="text-center py-10">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent" />
             </div>
-          ) : filteredMatches.length === 0 ? (
-            <div className="glass-panel text-center py-12 px-4 rounded-xl border border-dashed border-gold-500/20">
-              <Calendar className="h-10 w-10 text-dark-500 mx-auto mb-3" />
-              <p className="text-dark-300 font-medium text-sm">No {activeTab} matches currently scheduled.</p>
-              <p className="text-xs text-dark-500 mt-1">Check back later or register a new fixture in the Admin Panel.</p>
+          ) : liveMatches.length === 0 ? (
+            <div className="glass-panel text-center py-10 px-4 rounded-2xl border border-dark-850">
+              <Calendar className="h-8 w-8 text-dark-500 mx-auto mb-2" />
+              <p className="text-dark-300 font-bold text-xs uppercase tracking-widest">No Matches Currently Live</p>
+              <p className="text-[10px] text-dark-450 mt-1 uppercase font-semibold">Check upcoming tabs in category pages for future schedules</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
-              {filteredMatches.map((match) => {
+              {liveMatches.map((match) => {
                 const isCricket = match.sport === 'cricket';
+                const nameA = match.teamA.name.includes('|') ? match.teamA.name.split('|')[1].trim() : match.teamA.name;
+                const nameB = match.teamB.name.includes('|') ? match.teamB.name.split('|')[1].trim() : match.teamB.name;
+
                 return (
                   <Link
                     key={match.id}
                     href={`/matches/${match.id}`}
-                    className="glass-panel glass-panel-hover rounded-xl p-5 flex flex-col justify-between cursor-pointer"
+                    className="glass-panel glass-panel-hover rounded-2xl p-4.5 flex flex-col justify-between cursor-pointer border border-purple-500/10 shadow-lg"
                   >
-                    <div className="flex items-center justify-between mb-4 border-b border-dark-800 pb-3">
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${isCricket ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'}`}>
-                          {match.sport}
-                        </span>
-                        {match.status === 'live' && (
-                          <span className="flex items-center space-x-1 text-red-500 text-[10px] font-bold uppercase animate-pulse">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                            <span>LIVE</span>
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-dark-400">{match.date}</span>
+                    <div className="flex items-center justify-between mb-3 border-b border-dark-850 pb-2.5">
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
+                        isCricket ? 'bg-amber-500/10 text-amber-400' : 'bg-orange-500/10 text-orange-400'
+                      }`}>
+                        {match.sport}
+                      </span>
+                      <span className="text-[9px] text-dark-450 font-bold uppercase">{match.date}</span>
                     </div>
 
-                    {/* Team Display */}
                     <div className="grid grid-cols-7 items-center gap-2 mb-4">
                       {/* Team A */}
                       <div className="col-span-3 text-center">
                         <img
                           src={match.teamA.logo}
-                          alt={match.teamA.name}
-                          className="h-12 w-12 mx-auto object-contain bg-dark-900/50 p-1.5 rounded-full border border-dark-800 mb-2"
+                          alt=""
+                          className="h-10 w-10 mx-auto object-contain bg-dark-950 p-1.5 rounded-full border border-dark-850 mb-1"
                         />
-                        <p className="text-xs font-bold text-white truncate max-w-full">{match.teamA.name}</p>
+                        <span className="text-[11px] font-black text-white uppercase tracking-wider block truncate max-w-[120px] mx-auto">{nameA}</span>
                       </div>
 
-                      {/* VS Divider */}
-                      <div className="col-span-1 text-center font-bold text-gold-500/60 italic text-sm">VS</div>
+                      {/* VS */}
+                      <div className="col-span-1 text-center font-black text-purple-400/40 text-xs italic">VS</div>
 
                       {/* Team B */}
                       <div className="col-span-3 text-center">
                         <img
                           src={match.teamB.logo}
-                          alt={match.teamB.name}
-                          className="h-12 w-12 mx-auto object-contain bg-dark-900/50 p-1.5 rounded-full border border-dark-800 mb-2"
+                          alt=""
+                          className="h-10 w-10 mx-auto object-contain bg-dark-950 p-1.5 rounded-full border border-dark-850 mb-1"
                         />
-                        <p className="text-xs font-bold text-white truncate max-w-full">{match.teamB.name}</p>
+                        <span className="text-[11px] font-black text-white uppercase tracking-wider block truncate max-w-[120px] mx-auto">{nameB}</span>
                       </div>
                     </div>
 
-                    {/* Score Summary */}
-                    <div className="bg-dark-950/40 p-3 rounded-lg border border-gold-500/5 mb-3 text-center">
+                    {/* Scores */}
+                    <div className="bg-dark-950/60 p-2.5 rounded-xl border border-dark-850 text-center font-mono font-black">
                       {isCricket ? (
                         match.cricketState ? (
-                          <div>
-                            <p className="text-lg font-bold text-white">
-                              {match.cricketState.runs}/{match.cricketState.wickets}
-                              <span className="text-xs text-dark-400 ml-2">({match.cricketState.overs}.{match.cricketState.balls} Ov)</span>
-                            </p>
-                            {match.cricketState.targetRuns && (
-                              <p className="text-[11px] text-gold-400 mt-1 font-semibold">
-                                Target: {match.cricketState.targetRuns} | Need {match.cricketState.targetRuns - match.cricketState.runs} runs
-                              </p>
-                            )}
+                          <div className="text-white text-base">
+                            {match.cricketState.runs}/{match.cricketState.wickets}
+                            <span className="text-xs text-dark-450 font-normal ml-1.5">({match.cricketState.overs}.{match.cricketState.balls} Ov)</span>
                           </div>
                         ) : (
-                          <p className="text-xs text-dark-400">Match Scheduled</p>
+                          <span className="text-xs text-dark-400">Scoring updates pending</span>
                         )
                       ) : (
                         match.kabaddiState ? (
-                          <div>
-                            <p className="text-xl font-extrabold text-white tracking-widest">
-                              {match.kabaddiState.scoreA} <span className="text-gold-500 font-normal">:</span> {match.kabaddiState.scoreB}
-                            </p>
-                            <p className="text-[10px] text-dark-400 mt-1 uppercase font-bold tracking-wider">
-                              Half {match.kabaddiState.half} | {Math.floor(match.kabaddiState.timeRemaining / 60)}:{(match.kabaddiState.timeRemaining % 60).toString().padStart(2, '0')}
-                            </p>
+                          <div className="text-white text-lg tracking-widest">
+                            {match.kabaddiState.scoreA} <span className="text-purple-400 font-normal">:</span> {match.kabaddiState.scoreB}
                           </div>
                         ) : (
-                          <p className="text-xs text-dark-400">Match Scheduled</p>
+                          <span className="text-xs text-dark-400">Scoring updates pending</span>
                         )
                       )}
-                    </div>
-
-                    <div className="text-center text-xs font-semibold text-gold-400 truncate mt-1">
-                      {match.tossText || 'Click to view scoreboard details'}
                     </div>
                   </Link>
                 );
@@ -271,102 +197,280 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Dynamic Leaderboards section */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-8">
+        {/* 3. SPORTS CATEGORIES */}
+        <div className="grid md:grid-cols-2 gap-8 select-none">
           
-          {/* Top Batsmen */}
-          <div className="glass-panel rounded-xl p-5">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gold-400 mb-4 flex items-center gap-2 border-b border-dark-800 pb-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>Top Run Scorers</span>
-            </h3>
-            <div className="space-y-3">
-              {players.filter(p => p.stats.cricket).sort((a,b) => (b.stats.cricket?.runs || 0) - (a.stats.cricket?.runs || 0)).slice(0, 3).map((player, i) => (
-                <div key={player.id} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="font-bold text-gold-500/80 w-4">#{i+1}</span>
-                    <img src={player.photo} alt={player.name} className="h-8 w-8 rounded-full object-cover border border-dark-800" />
-                    <div>
-                      <p className="font-bold text-white">{player.name}</p>
-                      <p className="text-[10px] text-dark-400">{player.role}</p>
-                    </div>
-                  </div>
-                  <span className="font-extrabold text-white text-sm bg-dark-900 px-2 py-1 rounded border border-dark-800">{player.stats.cricket?.runs} runs</span>
+          {/* Cricket Card */}
+          <div className="relative overflow-hidden rounded-2xl border border-purple-500/10 p-6 bg-gradient-to-b from-dark-900 to-dark-950 shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="inline-flex items-center space-x-1 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-amber-400 text-[9px] font-black uppercase tracking-wider mb-4">
+                <span>Cricket League</span>
+              </div>
+              <h3 className="text-lg font-black text-white uppercase tracking-wider mb-2">Cricket Hub</h3>
+              <p className="text-xs text-dark-400 leading-relaxed mb-6">
+                Explore schedules, standings, franchise lineups, batsman score records, and bowling economy logs.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4 border-t border-dark-850 pt-4 mb-6 text-[11px] font-bold text-dark-350">
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Active Tournaments</span>
+                  <span className="text-white font-black">{cricketTournaments.length} Cups</span>
                 </div>
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Franchise Teams</span>
+                  <span className="text-white font-black">{cricketTeams} Rosters</span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Matches fixtures</span>
+                  <span className="text-white font-black">{cricketMatches.length} Fixtures</span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Registered Batsmen</span>
+                  <span className="text-white font-black">{cricketPlayers.length} Athletes</span>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/cricket"
+              className="w-full text-center py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all"
+            >
+              Enter Cricket Dashboard
+            </Link>
+          </div>
+
+          {/* Kabaddi Card */}
+          <div className="relative overflow-hidden rounded-2xl border border-purple-500/10 p-6 bg-gradient-to-b from-dark-900 to-dark-950 shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="inline-flex items-center space-x-1 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full text-orange-400 text-[9px] font-black uppercase tracking-wider mb-4">
+                <span>Pro Kabaddi</span>
+              </div>
+              <h3 className="text-lg font-black text-white uppercase tracking-wider mb-2">Kabaddi Hub</h3>
+              <p className="text-xs text-dark-400 leading-relaxed mb-6">
+                Inspect live raid clocks, team sub-points, raid successes, super tackles, and defender standings.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4 border-t border-dark-850 pt-4 mb-6 text-[11px] font-bold text-dark-350">
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Active Tournaments</span>
+                  <span className="text-white font-black">{kabaddiTournaments.length} Leagues</span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Franchise Teams</span>
+                  <span className="text-white font-black">{kabaddiTeams} Squads</span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Matches Scheduled</span>
+                  <span className="text-white font-black">{kabaddiMatches.length} Matches</span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-dark-500 uppercase tracking-widest block">Registered Raiders</span>
+                  <span className="text-white font-black">{kabaddiPlayers.length} Athletes</span>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/kabaddi"
+              className="w-full text-center py-2.5 bg-indigo-600 hover:bg-indigo-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all"
+            >
+              Enter Kabaddi Dashboard
+            </Link>
+          </div>
+
+        </div>
+
+        {/* 4. FEATURED TOURNAMENTS */}
+        <div className="space-y-4">
+          <div className="border-b border-dark-850 pb-3">
+            <h2 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-purple-400" />
+              <span>Featured Tournaments</span>
+            </h2>
+            <p className="text-[10px] text-dark-450 uppercase font-semibold mt-0.5">Important local cups & leagues</p>
+          </div>
+
+          {tournaments.length === 0 ? (
+            <p className="text-center text-xs text-dark-500 py-6">No active championships registered.</p>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tournaments.slice(0, 3).map((tour) => (
+                <Link
+                  key={tour.id}
+                  href={`/${tour.sport}/tournaments`}
+                  className="glass-panel glass-panel-hover rounded-2xl p-5 border border-purple-500/10 shadow-lg flex flex-col justify-between"
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <img 
+                      src={tour.logo} 
+                      alt="" 
+                      className="w-10 h-10 object-contain bg-dark-950 p-1 rounded-xl border border-dark-850" 
+                    />
+                    <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      {tour.sport}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-black text-white uppercase tracking-wider mb-1 line-clamp-1">{tour.name}</h3>
+                    <p className="text-[10px] text-dark-450 uppercase font-semibold leading-normal line-clamp-2">{tour.rules}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-4 text-[9px] font-black uppercase tracking-widest text-purple-400">
+                    <span>View Brackets & Standings</span>
+                    <ChevronRight className="w-4 h-4 text-purple-400" />
+                  </div>
+                </Link>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* 5. TOP PLAYERS */}
+        <div className="grid md:grid-cols-2 gap-8">
+          
+          {/* Cricket MVP */}
+          <div className="glass-panel rounded-2xl p-5 border border-purple-500/10">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-4 flex items-center gap-2 border-b border-dark-850 pb-2.5">
+              <Trophy className="h-4 w-4 text-purple-500" />
+              <span>Leading Run Scorers (Cricket)</span>
+            </h3>
+            
+            <div className="space-y-3.5">
+              {players.filter(p => p.stats?.cricket).length === 0 ? (
+                <p className="text-center text-xs text-dark-500 py-4">No stats profiles found</p>
+              ) : (
+                players
+                  .filter(p => p.stats?.cricket)
+                  .sort((a,b) => (b.stats.cricket?.runs || 0) - (a.stats.cricket?.runs || 0))
+                  .slice(0, 3)
+                  .map((p, idx) => (
+                    <div key={p.id} className="flex items-center justify-between text-xs transition-all hover:bg-dark-900/30 p-1 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <span className="font-mono font-black text-purple-400 w-3 text-center">#{idx + 1}</span>
+                        <img src={p.photo} alt="" className="w-8 h-8 rounded-full object-cover border border-dark-800" />
+                        <div>
+                          <p className="font-black text-white uppercase text-[11px] tracking-wide">{p.name}</p>
+                          <p className="text-[8px] text-dark-450 font-black uppercase">{p.role}</p>
+                        </div>
+                      </div>
+                      <span className="font-mono font-black text-white text-[11px] bg-dark-950 px-2 py-0.5 rounded border border-dark-850">
+                        {p.stats.cricket?.runs} <span className="text-[8px] text-dark-450 font-normal uppercase">Runs</span>
+                      </span>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
 
-          {/* Top Bowlers */}
-          <div className="glass-panel rounded-xl p-5">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gold-400 mb-4 flex items-center gap-2 border-b border-dark-800 pb-2">
-              <Shield className="h-4 w-4" />
-              <span>Leading Wicket Takers</span>
+          {/* Kabaddi MVP */}
+          <div className="glass-panel rounded-2xl p-5 border border-purple-500/10">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-4 flex items-center gap-2 border-b border-dark-850 pb-2.5">
+              <Award className="h-4 w-4 text-purple-500" />
+              <span>Leading Raiders (Kabaddi)</span>
             </h3>
-            <div className="space-y-3">
-              {players.filter(p => p.stats.cricket).sort((a,b) => (b.stats.cricket?.wickets || 0) - (a.stats.cricket?.wickets || 0)).slice(0, 3).map((player, i) => (
-                <div key={player.id} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="font-bold text-gold-500/80 w-4">#{i+1}</span>
-                    <img src={player.photo} alt={player.name} className="h-8 w-8 rounded-full object-cover border border-dark-800" />
-                    <div>
-                      <p className="font-bold text-white">{player.name}</p>
-                      <p className="text-[10px] text-dark-400">{player.role}</p>
+            
+            <div className="space-y-3.5">
+              {players.filter(p => p.stats?.kabaddi).length === 0 ? (
+                <p className="text-center text-xs text-dark-500 py-4">No stats profiles found</p>
+              ) : (
+                players
+                  .filter(p => p.stats?.kabaddi)
+                  .sort((a,b) => (b.stats.kabaddi?.raidPoints || 0) - (a.stats.kabaddi?.raidPoints || 0))
+                  .slice(0, 3)
+                  .map((p, idx) => (
+                    <div key={p.id} className="flex items-center justify-between text-xs transition-all hover:bg-dark-900/30 p-1 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <span className="font-mono font-black text-purple-400 w-3 text-center">#{idx + 1}</span>
+                        <img src={p.photo} alt="" className="w-8 h-8 rounded-full object-cover border border-dark-800" />
+                        <div>
+                          <p className="font-black text-white uppercase text-[11px] tracking-wide">{p.name}</p>
+                          <p className="text-[8px] text-dark-450 font-black uppercase">{p.role}</p>
+                        </div>
+                      </div>
+                      <span className="font-mono font-black text-white text-[11px] bg-dark-950 px-2 py-0.5 rounded border border-dark-850">
+                        {p.stats.kabaddi?.raidPoints} <span className="text-[8px] text-dark-450 font-normal uppercase">Pts</span>
+                      </span>
                     </div>
-                  </div>
-                  <span className="font-extrabold text-white text-sm bg-dark-900 px-2 py-1 rounded border border-dark-800">{player.stats.cricket?.wickets} wkts</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Kabaddi Raiders */}
-          <div className="glass-panel rounded-xl p-5">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gold-400 mb-4 flex items-center gap-2 border-b border-dark-800 pb-2">
-              <Award className="h-4 w-4" />
-              <span>MVP Kabaddi Raiders</span>
-            </h3>
-            <div className="space-y-3">
-              {players.filter(p => p.stats.kabaddi).sort((a,b) => (b.stats.kabaddi?.raidPoints || 0) - (a.stats.kabaddi?.raidPoints || 0)).slice(0, 3).map((player, i) => (
-                <div key={player.id} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="font-bold text-gold-500/80 w-4">#{i+1}</span>
-                    <img src={player.photo} alt={player.name} className="h-8 w-8 rounded-full object-cover border border-dark-800" />
-                    <div>
-                      <p className="font-bold text-white">{player.name}</p>
-                      <p className="text-[10px] text-dark-400">{player.role}</p>
-                    </div>
-                  </div>
-                  <span className="font-extrabold text-white text-sm bg-dark-900 px-2 py-1 rounded border border-dark-800">{player.stats.kabaddi?.raidPoints} pts</span>
-                </div>
-              ))}
+                  ))
+              )}
             </div>
           </div>
 
         </div>
 
-        {/* Sponsor Showcase */}
+        {/* 6. SPONSORS SECTION */}
         {sponsors.length > 0 && (
-          <div className="glass-panel rounded-xl p-6 text-center">
-            <p className="text-[10px] font-extrabold uppercase tracking-widest text-gold-500/60 mb-4">Official Platform Sponsors</p>
-            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-              {sponsors.map(sponsor => (
+          <div className="glass-panel rounded-2xl p-5 text-center overflow-hidden border border-purple-500/10 shadow-lg relative select-none">
+            <p className="text-[8px] font-black uppercase tracking-widest text-purple-400 mb-4">Official Event & Corporate Sponsors</p>
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12">
+              {sponsors.map((sp) => (
                 <a
-                  key={sponsor.id}
-                  href={sponsor.link}
-                  className="grayscale hover:grayscale-0 opacity-40 hover:opacity-100 transition-all"
+                  key={sp.id}
+                  href={sp.link}
+                  className="flex items-center space-x-2.5 opacity-55 hover:opacity-100 transition-all grayscale hover:grayscale-0"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className="flex items-center space-x-2">
-                    <img src={sponsor.logo} alt={sponsor.name} className="h-8 w-8 object-contain" />
-                    <span className="text-white text-xs font-bold font-sans uppercase tracking-wider">{sponsor.name}</span>
-                  </div>
+                  <img src={sp.logo} alt="" className="h-6 w-6 object-contain" />
+                  <span className="text-white text-xs font-black uppercase tracking-wide">{sp.name}</span>
                 </a>
               ))}
             </div>
           </div>
         )}
+
+        {/* 7. ABOUT SECTION */}
+        <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-purple-500/10 shadow-lg">
+          <div className="border-b border-dark-850 pb-3 mb-5 text-center sm:text-left">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider">Broadcasting Infrastructure Features</h3>
+            <p className="text-[9px] text-dark-450 uppercase font-semibold mt-0.5">Everything you need to broadcast a tournament</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <div className="space-y-1.5 text-center sm:text-left">
+              <div className="mx-auto sm:mx-0 w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                <Radio className="h-4 w-4" />
+              </div>
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Live Scoring</h4>
+              <p className="text-[11px] text-dark-400 leading-relaxed">
+                Automated scorers register run metrics and raid ticks directly from mobile phones on court, refreshing spectators within milliseconds.
+              </p>
+            </div>
+
+            <div className="space-y-1.5 text-center sm:text-left">
+              <div className="mx-auto sm:mx-0 w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                <Play className="h-4 w-4" />
+              </div>
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Live Commentary</h4>
+              <p className="text-[11px] text-dark-400 leading-relaxed">
+                Dynamic ball-by-ball description lines generated dynamically during the match feed update commentators in real-time.
+              </p>
+            </div>
+
+            <div className="space-y-1.5 text-center sm:text-left">
+              <div className="mx-auto sm:mx-0 w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                <Shield className="h-4 w-4" />
+              </div>
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">WebRTC Broadcasting</h4>
+              <p className="text-[11px] text-dark-400 leading-relaxed">
+                Connect mobile cameras via WebRTC signal links to render high-definition streams inside the admin broadcast switcher dashboard.
+              </p>
+            </div>
+
+            <div className="space-y-1.5 text-center sm:text-left">
+              <div className="mx-auto sm:mx-0 w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                <CheckSquare className="h-4 w-4" />
+              </div>
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Tournament Management</h4>
+              <p className="text-[11px] text-dark-400 leading-relaxed">
+                Create teams, register players, initialize tournament brackets, and auto-calculate standings and net run rates cleanly.
+              </p>
+            </div>
+
+          </div>
+        </div>
 
       </main>
 

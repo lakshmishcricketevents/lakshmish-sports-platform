@@ -642,55 +642,238 @@ function mapFromDb(dbMatch: any, originalIdFallback?: string): Match {
   };
 }
 
-async function syncLocalToSupabase() {
+// Mappers for newly synchronized tables
+function mapTournamentToDb(tour: Partial<Tournament>): any {
+  const dbTour: any = {};
+  if (tour.id !== undefined) dbTour.id = tour.id;
+  if (tour.name !== undefined) dbTour.name = tour.name;
+  if (tour.logo !== undefined) dbTour.logo = tour.logo;
+  if (tour.sport !== undefined) dbTour.sport = tour.sport;
+  if (tour.rules !== undefined) dbTour.rules = tour.rules;
+  if (tour.status !== undefined) dbTour.status = tour.status;
+  if (tour.teams !== undefined) dbTour.teams = tour.teams;
+  if (tour.fixtures !== undefined) dbTour.fixtures = tour.fixtures;
+  if (tour.pointsTable !== undefined) dbTour.points_table = tour.pointsTable;
+  return dbTour;
+}
+
+function mapTournamentFromDb(dbTour: any): Tournament {
+  return {
+    id: dbTour.id,
+    name: dbTour.name,
+    logo: dbTour.logo,
+    sport: dbTour.sport,
+    rules: dbTour.rules,
+    status: dbTour.status,
+    teams: safeParse(dbTour.teams) || [],
+    fixtures: safeParse(dbTour.fixtures) || [],
+    pointsTable: safeParse(dbTour.points_table) || []
+  };
+}
+
+function mapTeamToDb(team: Partial<Team>): any {
+  const dbTeam: any = {};
+  if (team.id !== undefined) dbTeam.id = team.id;
+  if (team.name !== undefined) dbTeam.name = team.name;
+  if (team.logo !== undefined) dbTeam.logo = team.logo;
+  if (team.players !== undefined) dbTeam.players = team.players;
+  if (team.captainId !== undefined) dbTeam.captain_id = team.captainId;
+  if (team.viceCaptainId !== undefined) dbTeam.vice_captain_id = team.viceCaptainId;
+  if (team.purse !== undefined) dbTeam.purse = team.purse;
+  if (team.stats !== undefined) dbTeam.stats = team.stats;
+  return dbTeam;
+}
+
+function mapTeamFromDb(dbTeam: any): Team {
+  return {
+    id: dbTeam.id,
+    name: dbTeam.name,
+    logo: dbTeam.logo,
+    players: safeParse(dbTeam.players) || [],
+    captainId: dbTeam.captain_id,
+    viceCaptainId: dbTeam.vice_captain_id,
+    purse: dbTeam.purse || 1500,
+    stats: safeParse(dbTeam.stats) || { matchesPlayed: 0, won: 0, lost: 0, tied: 0, points: 0 }
+  };
+}
+
+function mapPlayerToDb(p: Partial<Player>): any {
+  const dbP: any = {};
+  if (p.id !== undefined) dbP.id = p.id;
+  if (p.name !== undefined) dbP.name = p.name;
+  if (p.photo !== undefined) dbP.photo = p.photo;
+  if (p.role !== undefined) dbP.role = p.role;
+  if (p.auctionBaseValue !== undefined) dbP.auction_base_value = p.auctionBaseValue;
+  if (p.soldValue !== undefined) dbP.sold_value = p.soldValue;
+  if (p.soldToTeamId !== undefined) dbP.sold_to_team_id = p.soldToTeamId;
+  if (p.mvpPoints !== undefined) dbP.mvp_points = p.mvpPoints;
+  if (p.stats !== undefined) dbP.stats = p.stats;
+  return dbP;
+}
+
+function mapPlayerFromDb(dbP: any): Player {
+  return {
+    id: dbP.id,
+    name: dbP.name,
+    photo: dbP.photo,
+    role: dbP.role as any,
+    auctionBaseValue: dbP.auction_base_value || 100,
+    soldValue: dbP.sold_value,
+    soldToTeamId: dbP.sold_to_team_id,
+    mvpPoints: dbP.mvp_points || 0,
+    stats: safeParse(dbP.stats) || {}
+  };
+}
+
+function mapSponsorToDb(s: Partial<Sponsor>): any {
+  const dbS: any = {};
+  if (s.id !== undefined) dbS.id = s.id;
+  if (s.name !== undefined) dbS.name = s.name;
+  if (s.logo !== undefined) dbS.logo = s.logo;
+  if (s.link !== undefined) dbS.link = s.link;
+  return dbS;
+}
+
+function mapSponsorFromDb(dbS: any): Sponsor {
+  return {
+    id: dbS.id,
+    name: dbS.name,
+    logo: dbS.logo,
+    link: dbS.link || '#'
+  };
+}
+
+async function syncAllLocalToSupabase() {
   if (!isSupabaseConfigured) return;
+  const local = readDb();
+  
+  // 1. Sync tournaments
   try {
-    const localMatches = readDb().matches;
-    if (localMatches.length === 0) return;
-
-    const { data: dbMatches, error } = await supabase.from('matches').select('id');
-    if (error) {
-      console.error('Failed to fetch existing match IDs for sync:', error);
-      return;
-    }
-
-    const dbIds = new Set(dbMatches?.map(m => m.id) || []);
-    const toInsert = [];
-
-    for (const match of localMatches) {
-      const dbId = stringToUuid(match.id);
-      if (!dbIds.has(dbId)) {
-        toInsert.push(mapToDb(match));
+    if (local.tournaments.length > 0) {
+      const { data: dbT, error: dbTError } = await supabase.from('tournaments').select('id');
+      if (dbTError) throw dbTError;
+      const dbIds = new Set(dbT?.map(t => t.id) || []);
+      const toInsert = local.tournaments.filter(t => !dbIds.has(t.id)).map(t => mapTournamentToDb(t));
+      if (toInsert.length > 0) {
+        const { error: insError } = await supabase.from('tournaments').upsert(toInsert);
+        if (insError) throw insError;
       }
     }
-
-    if (toInsert.length > 0) {
-      console.log(`Syncing ${toInsert.length} local matches to Supabase...`);
-      const { error: insertError } = await supabase.from('matches').insert(toInsert);
-      if (insertError) {
-        console.error('Failed to sync local matches to Supabase:', insertError);
-      } else {
-        console.log('Successfully synced local matches to Supabase.');
+  } catch (err: any) {
+    console.error('Error during Supabase sync for "tournaments" table (it may be missing or schema mismatch):', err.message || err);
+  }
+  
+  // 2. Sync teams
+  try {
+    if (local.teams.length > 0) {
+      const { data: dbTe, error: dbTeError } = await supabase.from('teams').select('id');
+      if (dbTeError) throw dbTeError;
+      const dbIds = new Set(dbTe?.map(t => t.id) || []);
+      const toInsert = local.teams.filter(t => !dbIds.has(t.id)).map(t => mapTeamToDb(t));
+      if (toInsert.length > 0) {
+        const { error: insError } = await supabase.from('teams').upsert(toInsert);
+        if (insError) throw insError;
       }
     }
-  } catch (err) {
-    console.error('Error during local to Supabase sync:', err);
+  } catch (err: any) {
+    console.error('Error during Supabase sync for "teams" table (it may be missing or schema mismatch):', err.message || err);
+  }
+  
+  // 3. Sync players
+  try {
+    if (local.players.length > 0) {
+      const { data: dbP, error: dbPError } = await supabase.from('players').select('id');
+      if (dbPError) throw dbPError;
+      const dbIds = new Set(dbP?.map(p => p.id) || []);
+      const toInsert = local.players.filter(p => !dbIds.has(p.id)).map(p => mapPlayerToDb(p));
+      if (toInsert.length > 0) {
+        const { error: insError } = await supabase.from('players').upsert(toInsert);
+        if (insError) throw insError;
+      }
+    }
+  } catch (err: any) {
+    console.error('Error during Supabase sync for "players" table (it may be missing or schema mismatch):', err.message || err);
+  }
+
+  // 4. Sync sponsors
+  try {
+    if (local.sponsors.length > 0) {
+      const { data: dbS, error: dbSError } = await supabase.from('sponsors').select('id');
+      if (dbSError) throw dbSError;
+      const dbIds = new Set(dbS?.map(s => s.id) || []);
+      const toInsert = local.sponsors.filter(s => !dbIds.has(s.id)).map(s => mapSponsorToDb(s));
+      if (toInsert.length > 0) {
+        const { error: insError } = await supabase.from('sponsors').upsert(toInsert);
+        if (insError) throw insError;
+      }
+    }
+  } catch (err: any) {
+    console.error('Error during Supabase sync for "sponsors" table (it may be missing or schema mismatch):', err.message || err);
+  }
+  
+  // 5. Sync matches
+  try {
+    if (local.matches.length > 0) {
+      const { data: dbMatches, error: dbMatchesError } = await supabase.from('matches').select('id');
+      if (dbMatchesError) throw dbMatchesError;
+      const dbIds = new Set(dbMatches?.map(m => m.id) || []);
+      const toInsert = [];
+      for (const match of local.matches) {
+        const dbId = stringToUuid(match.id);
+        if (!dbIds.has(dbId)) {
+          toInsert.push(mapToDb(match));
+        }
+      }
+      if (toInsert.length > 0) {
+        const { error: insError } = await supabase.from('matches').upsert(toInsert);
+        if (insError) throw insError;
+      }
+    }
+  } catch (err: any) {
+    console.error('Error during Supabase sync for "matches" table (it may be missing or schema mismatch):', err.message || err);
   }
 }
 
-// Unified Database Helpers mimicking Mongoose models
+// Unified Database Helpers mirroring Mongoose models
 export const db = {
   tournaments: {
-    find: async () => readDb().tournaments,
-    findById: async (id: string) => readDb().tournaments.find(t => t.id === id),
+    find: async () => {
+      if (isSupabaseConfigured) {
+        await syncAllLocalToSupabase();
+        const { data, error } = await supabase.from('tournaments').select('*');
+        if (data && !error) return data.map(t => mapTournamentFromDb(t));
+      }
+      return readDb().tournaments;
+    },
+    findById: async (id: string) => {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase.from('tournaments').select('*').eq('id', id).single();
+        if (data && !error) return mapTournamentFromDb(data);
+      }
+      return readDb().tournaments.find(t => t.id === id) || null;
+    },
     create: async (item: Omit<Tournament, 'id'>) => {
-      const data = readDb();
       const newItem: Tournament = { ...item, id: `tour-${Date.now()}` };
+      if (isSupabaseConfigured) {
+        const dbItem = mapTournamentToDb(newItem);
+        const { data, error } = await supabase.from('tournaments').insert([dbItem]).select().single();
+        if (data && !error) {
+          return mapTournamentFromDb(data);
+        }
+      }
+      const data = readDb();
       data.tournaments.push(newItem);
       writeDb(data);
       return newItem;
     },
     update: async (id: string, updates: Partial<Tournament>) => {
+      if (isSupabaseConfigured) {
+        const dbUpdates = mapTournamentToDb(updates);
+        const { data, error } = await supabase.from('tournaments').update(dbUpdates).eq('id', id).select().single();
+        if (data && !error) {
+          return mapTournamentFromDb(data);
+        }
+      }
       const data = readDb();
       const idx = data.tournaments.findIndex(t => t.id === id);
       if (idx !== -1) {
@@ -699,19 +882,55 @@ export const db = {
         return data.tournaments[idx];
       }
       return null;
+    },
+    delete: async (id: string) => {
+      if (isSupabaseConfigured) {
+        await supabase.from('tournaments').delete().eq('id', id);
+      }
+      const data = readDb();
+      data.tournaments = data.tournaments.filter(t => t.id !== id);
+      writeDb(data);
+      return true;
     }
   },
   teams: {
-    find: async () => readDb().teams,
-    findById: async (id: string) => readDb().teams.find(t => t.id === id),
+    find: async () => {
+      if (isSupabaseConfigured) {
+        await syncAllLocalToSupabase();
+        const { data, error } = await supabase.from('teams').select('*');
+        if (data && !error) return data.map(t => mapTeamFromDb(t));
+      }
+      return readDb().teams;
+    },
+    findById: async (id: string) => {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase.from('teams').select('*').eq('id', id).single();
+        if (data && !error) return mapTeamFromDb(data);
+      }
+      return readDb().teams.find(t => t.id === id) || null;
+    },
     create: async (item: Omit<Team, 'id'>) => {
-      const data = readDb();
       const newItem: Team = { ...item, id: `t-${Date.now()}` };
+      if (isSupabaseConfigured) {
+        const dbItem = mapTeamToDb(newItem);
+        const { data, error } = await supabase.from('teams').insert([dbItem]).select().single();
+        if (data && !error) {
+          return mapTeamFromDb(data);
+        }
+      }
+      const data = readDb();
       data.teams.push(newItem);
       writeDb(data);
       return newItem;
     },
     update: async (id: string, updates: Partial<Team>) => {
+      if (isSupabaseConfigured) {
+        const dbUpdates = mapTeamToDb(updates);
+        const { data, error } = await supabase.from('teams').update(dbUpdates).eq('id', id).select().single();
+        if (data && !error) {
+          return mapTeamFromDb(data);
+        }
+      }
       const data = readDb();
       const idx = data.teams.findIndex(t => t.id === id);
       if (idx !== -1) {
@@ -720,19 +939,55 @@ export const db = {
         return data.teams[idx];
       }
       return null;
+    },
+    delete: async (id: string) => {
+      if (isSupabaseConfigured) {
+        await supabase.from('teams').delete().eq('id', id);
+      }
+      const data = readDb();
+      data.teams = data.teams.filter(t => t.id !== id);
+      writeDb(data);
+      return true;
     }
   },
   players: {
-    find: async () => readDb().players,
-    findById: async (id: string) => readDb().players.find(p => p.id === id),
+    find: async () => {
+      if (isSupabaseConfigured) {
+        await syncAllLocalToSupabase();
+        const { data, error } = await supabase.from('players').select('*');
+        if (data && !error) return data.map(p => mapPlayerFromDb(p));
+      }
+      return readDb().players;
+    },
+    findById: async (id: string) => {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase.from('players').select('*').eq('id', id).single();
+        if (data && !error) return mapPlayerFromDb(data);
+      }
+      return readDb().players.find(p => p.id === id) || null;
+    },
     create: async (item: Omit<Player, 'id'>) => {
-      const data = readDb();
       const newItem: Player = { ...item, id: `p-${Date.now()}` };
+      if (isSupabaseConfigured) {
+        const dbItem = mapPlayerToDb(newItem);
+        const { data, error } = await supabase.from('players').insert([dbItem]).select().single();
+        if (data && !error) {
+          return mapPlayerFromDb(data);
+        }
+      }
+      const data = readDb();
       data.players.push(newItem);
       writeDb(data);
       return newItem;
     },
     update: async (id: string, updates: Partial<Player>) => {
+      if (isSupabaseConfigured) {
+        const dbUpdates = mapPlayerToDb(updates);
+        const { data, error } = await supabase.from('players').update(dbUpdates).eq('id', id).select().single();
+        if (data && !error) {
+          return mapPlayerFromDb(data);
+        }
+      }
       const data = readDb();
       const idx = data.players.findIndex(p => p.id === id);
       if (idx !== -1) {
@@ -741,12 +996,21 @@ export const db = {
         return data.players[idx];
       }
       return null;
+    },
+    delete: async (id: string) => {
+      if (isSupabaseConfigured) {
+        await supabase.from('players').delete().eq('id', id);
+      }
+      const data = readDb();
+      data.players = data.players.filter(p => p.id !== id);
+      writeDb(data);
+      return true;
     }
   },
   matches: {
     find: async () => {
       if (isSupabaseConfigured) {
-        await syncLocalToSupabase();
+        await syncAllLocalToSupabase();
         const { data, error } = await supabase.from('matches').select('*');
         if (error) {
           console.error('Error fetching matches from Supabase:', error);
@@ -849,6 +1113,16 @@ export const db = {
         return data.matches[idx];
       }
       return null;
+    },
+    delete: async (id: string) => {
+      if (isSupabaseConfigured) {
+        const dbId = stringToUuid(id);
+        await supabase.from('matches').delete().eq('id', dbId);
+      }
+      const data = readDb();
+      data.matches = data.matches.filter(m => m.id !== id);
+      writeDb(data);
+      return true;
     }
   },
   auction: {
@@ -861,15 +1135,30 @@ export const db = {
     }
   },
   sponsors: {
-    find: async () => readDb().sponsors,
+    find: async () => {
+      if (isSupabaseConfigured) {
+        await syncAllLocalToSupabase();
+        const { data, error } = await supabase.from('sponsors').select('*');
+        if (data && !error) return data.map(s => mapSponsorFromDb(s));
+      }
+      return readDb().sponsors;
+    },
     create: async (item: Omit<Sponsor, 'id'>) => {
-      const data = readDb();
       const newItem: Sponsor = { ...item, id: `s-${Date.now()}` };
+      if (isSupabaseConfigured) {
+        const dbItem = mapSponsorToDb(newItem);
+        const { data, error } = await supabase.from('sponsors').insert([dbItem]).select().single();
+        if (data && !error) return mapSponsorFromDb(data);
+      }
+      const data = readDb();
       data.sponsors.push(newItem);
       writeDb(data);
       return newItem;
     },
     delete: async (id: string) => {
+      if (isSupabaseConfigured) {
+        await supabase.from('sponsors').delete().eq('id', id);
+      }
       const data = readDb();
       data.sponsors = data.sponsors.filter(s => s.id !== id);
       writeDb(data);

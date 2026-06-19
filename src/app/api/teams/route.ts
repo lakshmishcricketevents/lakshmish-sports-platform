@@ -40,3 +40,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    }
+    await db.teams.delete(id);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get('id');
+    const body = await req.json();
+    const targetId = id || body.id;
+    if (!targetId) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    }
+    const updated = await db.teams.update(targetId, body);
+    if (!updated) {
+      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+    }
+    return NextResponse.json(updated);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

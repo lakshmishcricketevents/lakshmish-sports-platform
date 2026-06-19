@@ -14,6 +14,7 @@ function MobileCameraCaptureContent() {
   const [isMuted, setIsMuted] = useState(false);
   const [connStatus, setConnStatus] = useState<'disconnected' | 'connecting' | 'live'>('disconnected');
   const [errorMsg, setErrorMsg] = useState('');
+  const [cameraError, setCameraError] = useState('');
 
   // Diagnostics Panel States
   const [showDiag, setShowDiag] = useState(false);
@@ -140,15 +141,38 @@ function MobileCameraCaptureContent() {
     addLog('Testing camera access...');
     setDiagPermission('PENDING');
     setDiagStream('PENDING');
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const msg = "Secure Connection Required: Camera access is disabled on insecure connections (HTTP). Please access via HTTPS or localhost.";
+      setCameraError(msg);
+      setDiagPermission('FAIL');
+      setDiagStream('FAIL');
+      addLog('Camera access FAILED: MediaDevices API not available (requires HTTPS or localhost).');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setDiagPermission('PASS');
       setDiagStream('PASS');
+      setCameraError('');
       addLog('Camera access OK: ' + stream.getVideoTracks()[0].label);
       stream.getTracks().forEach(t => t.stop());
     } catch (err: any) {
       setDiagPermission('FAIL');
       setDiagStream('FAIL');
+      
+      let msg = '';
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError' || err.name === 'SecurityError') {
+        msg = "Camera Permission Denied: Tap the lock icon in the address bar to reset camera permissions, then click 'Enable Camera Access'.";
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        msg = "No Camera Found: We couldn't find a camera device on this phone. Ensure it is connected and enabled.";
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        msg = "Camera in Use: Another application is already using the camera. Please close other apps and try again.";
+      } else {
+        msg = `Camera Access Failed: ${err.message || 'Unknown error'}. Please try again.`;
+      }
+      setCameraError(msg);
       addLog('Camera access FAILED: ' + err.message);
     }
   };
@@ -249,20 +273,47 @@ function MobileCameraCaptureContent() {
       };
 
       let stream: MediaStream;
-      try {
-        addLog('Requesting browser camera stream...');
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        setDiagPermission('PASS');
-        setDiagStream('PASS');
-        addLog('Camera media stream successfully captured.');
-        addLog('Stream Started');
-      } catch (mediaErr: any) {
-        addLog('Browser camera stream BLOCKED: ' + mediaErr.message + '. Initializing Canvas fallback...');
+      
+      // Check if MediaDevices API is supported (requires HTTPS or localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const msg = "Secure Connection Required: Camera access is disabled on insecure connections (HTTP). Please access via HTTPS or localhost.";
+        setCameraError(msg);
         setDiagPermission('FAIL');
         setDiagStream('FAIL');
+        addLog('Browser camera stream BLOCKED: MediaDevices API not available (requires HTTPS or localhost). Initializing Canvas fallback...');
         stream = createMockStream();
-        addLog('Stream Started');
+      } else {
+        try {
+          addLog('Requesting browser camera stream...');
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          setDiagPermission('PASS');
+          setDiagStream('PASS');
+          setCameraError(''); // Clear error if camera captured successfully
+          addLog('Camera media stream successfully captured.');
+          addLog('Stream Started');
+        } catch (mediaErr: any) {
+          let msg = '';
+          if (mediaErr.name === 'NotAllowedError' || mediaErr.name === 'PermissionDeniedError' || mediaErr.name === 'SecurityError') {
+            msg = "Camera Permission Denied: Tap the lock icon in the address bar to reset camera permissions, then click 'Enable Camera Access'.";
+            addLog('Camera permission denied.');
+          } else if (mediaErr.name === 'NotFoundError' || mediaErr.name === 'DevicesNotFoundError') {
+            msg = "No Camera Found: We couldn't find a camera device on this phone. Ensure it is connected and enabled.";
+            addLog('No camera hardware found.');
+          } else if (mediaErr.name === 'NotReadableError' || mediaErr.name === 'TrackStartError') {
+            msg = "Camera in Use: Another application is already using the camera. Please close other apps and try again.";
+            addLog('Camera resource lock failed.');
+          } else {
+            msg = `Camera Access Failed: ${mediaErr.message || 'Unknown error'}. Please try again.`;
+            addLog('Camera failed: ' + mediaErr.message);
+          }
+          setCameraError(msg);
+          setDiagPermission('FAIL');
+          setDiagStream('FAIL');
+          stream = createMockStream();
+          addLog('Stream Started with fallback feed.');
+        }
       }
+      
       streamRef.current = stream;
 
       if (localVideoRef.current) {
@@ -487,6 +538,23 @@ function MobileCameraCaptureContent() {
               className="mt-4 bg-gold-500 text-dark-950 px-4 py-2 rounded-lg text-xs font-bold uppercase transition-transform active:scale-95"
             >
               Retry Connection
+            </button>
+          </div>
+        )}
+
+        {cameraError && (
+          <div className="absolute inset-0 bg-dark-950/85 flex flex-col items-center justify-center p-6 text-center z-10 backdrop-blur-sm">
+            <AlertCircle className="w-12 h-12 text-amber-500 mb-3 animate-pulse" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Camera Access Required</h3>
+            <p className="text-xs text-dark-300 leading-relaxed max-w-xs mb-4 text-center">
+              {cameraError}
+            </p>
+            <button
+              onClick={startCapture}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all transform active:scale-95 shadow-lg shadow-purple-500/20 flex items-center space-x-2"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Enable Camera Access</span>
             </button>
           </div>
         )}

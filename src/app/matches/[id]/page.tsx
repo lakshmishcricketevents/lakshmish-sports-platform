@@ -5,10 +5,49 @@ import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Match, Player } from '@/lib/db';
-import { Play, ArrowLeft, Tv, ShieldAlert, Award, AlertCircle, Clock, Volume2, Shield } from 'lucide-react';
+import { Play, ArrowLeft, Tv, Award, AlertCircle, Clock, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
+function safeParse(val: any) {
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val);
+    } catch (e) {
+      return val;
+    }
+  }
+  return val;
+}
+
+function mapFromDbClient(dbMatch: any, originalIdFallback: string): Match {
+  const parsedKabaddiState = safeParse(dbMatch.kabaddi_state);
+  const parsedCricketState = safeParse(dbMatch.cricket_state);
+  
+  const originalId = 
+    (parsedKabaddiState && parsedKabaddiState.originalId) || 
+    (parsedCricketState && parsedCricketState.originalId) || 
+    originalIdFallback || 
+    dbMatch.id;
+
+  return {
+    id: originalId,
+    supabaseId: dbMatch.id,
+    tournamentId: dbMatch.tournament_id,
+    sport: dbMatch.sport,
+    teamA: safeParse(dbMatch.team_a),
+    teamB: safeParse(dbMatch.team_b),
+    status: dbMatch.status,
+    winnerId: dbMatch.winner_id,
+    tossText: dbMatch.toss_text,
+    date: dbMatch.date,
+    controlToken: dbMatch.control_token,
+    cricketState: parsedCricketState,
+    kabaddiState: parsedKabaddiState,
+    kabaddiActions: safeParse(dbMatch.kabaddi_actions) || [],
+    ballByBall: safeParse(dbMatch.ball_by_ball) || []
+  };
+}
 
 export default function MatchScoreboard() {
   const router = useRouter();
@@ -71,8 +110,10 @@ export default function MatchScoreboard() {
                 updatedOriginalId === matchId ||
                 (matchRef.current?.supabaseId && payload.new.id === matchRef.current.supabaseId)
               ) {
-                console.log('Realtime update received on Match Details:', payload.new);
-                loadMatchData();
+                console.log('Realtime update received on Match Details (Instant UI Sync):', payload.new);
+                const mappedMatch = mapFromDbClient(payload.new, matchId);
+                setMatch(mappedMatch);
+                matchRef.current = mappedMatch;
               }
             }
           )
@@ -104,10 +145,10 @@ export default function MatchScoreboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-[#05070f]">
         <Navbar />
         <div className="flex-grow flex items-center justify-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gold-500 border-r-transparent align-[-0.125em]" />
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-neon-yellow border-r-transparent align-[-0.125em]" />
         </div>
         <Footer />
       </div>
@@ -116,12 +157,12 @@ export default function MatchScoreboard() {
 
   if (!match) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen bg-[#05070f]">
         <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center p-8">
           <AlertCircle className="h-12 w-12 text-red-400 mb-2" />
           <p className="text-xl font-bold text-white">Match scorecard not found</p>
-          <button onClick={() => router.push('/')} className="mt-4 text-xs font-bold text-gold-450 hover:underline">
+          <button onClick={() => router.push('/')} className="mt-4 text-xs font-bold text-neon-yellow hover:underline">
             Back to Dashboard
           </button>
         </div>
@@ -156,7 +197,7 @@ export default function MatchScoreboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-dark-950">
+    <div className="flex flex-col min-h-screen bg-[#05070f] text-white">
       <Navbar />
 
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -165,7 +206,7 @@ export default function MatchScoreboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-dark-400 hover:text-gold-400 transition-all self-start"
+            className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-dark-400 hover:text-neon-yellow transition-all self-start"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Match Center</span>
@@ -175,7 +216,7 @@ export default function MatchScoreboard() {
             <Link
               href={`/overlay/${match.id}`}
               target="_blank"
-              className="flex items-center space-x-2 bg-gold-500/10 border border-gold-500/30 hover:border-gold-500/60 text-gold-400 px-4 py-2 rounded-lg text-xs font-bold transition-all glow-gold"
+              className="flex items-center space-x-2 bg-neon-yellow/10 border border-neon-yellow/30 hover:border-neon-yellow/60 text-neon-yellow px-4 py-2 rounded-lg text-xs font-bold transition-all neon-glow"
             >
               <Tv className="h-4 w-4" />
               <span>Open Streaming Overlay</span>
@@ -192,12 +233,12 @@ export default function MatchScoreboard() {
         </div>
 
         {/* Live Score Hero Panel */}
-        <div className="glass-panel border-gold-500/20 rounded-2xl p-6 mb-8 bg-gradient-to-br from-dark-900 via-dark-950 to-dark-950 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-32 h-32 bg-gold-500/5 rounded-full blur-2xl" />
+        <div className="glass-panel border-neon-yellow/20 neon-glow rounded-2xl p-6 mb-8 bg-gradient-to-br from-[#0e1227] via-[#05070f] to-[#05070f] shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-32 h-32 bg-neon-yellow/5 rounded-full blur-2xl" />
 
           {/* Sport Status Badge */}
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <span className="px-2.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-gold-500/10 text-gold-400 border border-gold-500/20">
+            <span className="px-2.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-neon-yellow/10 text-neon-yellow border border-neon-yellow/20">
               {match.sport}
             </span>
             {match.status === 'live' ? (
@@ -228,8 +269,8 @@ export default function MatchScoreboard() {
             <div className="md:col-span-3 text-center py-2 px-4 bg-dark-950/40 rounded-xl border border-dark-850 self-stretch flex flex-col justify-center">
               {isCricket && cState ? (
                 <div>
-                  <p className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                    {cState.runs}<span className="text-gold-500">/</span>{cState.wickets}
+                  <p className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+                    {cState.runs}<span className="text-neon-yellow">/</span>{cState.wickets}
                   </p>
                   <p className="text-xs sm:text-sm text-dark-300 font-semibold mt-2">
                     {cState.overs}.{cState.balls} Overs
@@ -238,20 +279,20 @@ export default function MatchScoreboard() {
                   <div className="flex justify-center space-x-4 mt-3 text-xs border-t border-dark-800/60 pt-3">
                     <p className="text-dark-400">CRR: <span className="font-bold text-white">{calculateCRR()}</span></p>
                     {calculateRRR() && (
-                      <p className="text-gold-400">RRR: <span className="font-bold">{calculateRRR()}</span></p>
+                      <p className="text-neon-yellow">RRR: <span className="font-bold">{calculateRRR()}</span></p>
                     )}
                   </div>
                 </div>
               ) : kState ? (
                 <div>
                   <div className="flex items-center justify-center space-x-6 sm:space-x-8">
-                    <span className="text-4xl sm:text-6xl font-extrabold text-white">{kState.scoreA}</span>
-                    <span className="text-xl sm:text-2xl font-bold text-gold-500/60">:</span>
-                    <span className="text-4xl sm:text-6xl font-extrabold text-white">{kState.scoreB}</span>
+                    <span className="text-4xl sm:text-6xl font-black text-white">{kState.scoreA}</span>
+                    <span className="text-xl sm:text-2xl font-bold text-neon-yellow/70">:</span>
+                    <span className="text-4xl sm:text-6xl font-black text-white">{kState.scoreB}</span>
                   </div>
                   
                   <div className="flex items-center justify-center space-x-2 text-xs text-dark-300 mt-4 bg-dark-900/60 py-1.5 px-4 rounded-full max-w-xs mx-auto border border-dark-800">
-                    <Clock className="h-4 w-4 text-gold-500" />
+                    <Clock className="h-4 w-4 text-neon-yellow" />
                     <span className="font-mono tracking-wider text-white">
                       Half {kState.half} | {Math.floor(kState.timeRemaining / 60)}:{(kState.timeRemaining % 60).toString().padStart(2, '0')}
                     </span>
@@ -260,9 +301,9 @@ export default function MatchScoreboard() {
                   <div className="mt-4 text-center">
                     <Link
                       href={`/matches/${matchId}/kabaddi`}
-                      className="inline-flex items-center space-x-1.5 bg-gold-500/10 hover:bg-gold-500/20 text-[#fbbf24] border border-[#eec750]/30 hover:border-gold-500 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all shadow-md"
+                      className="inline-flex items-center space-x-1.5 bg-neon-yellow/10 hover:bg-neon-yellow/20 text-neon-yellow border border-neon-yellow/20 hover:border-neon-yellow px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all shadow-md"
                     >
-                      <Tv className="h-4 w-4 text-gold-500" />
+                      <Tv className="h-4 w-4 text-neon-yellow" />
                       <span>Open PKL Broadcast Scoreboard</span>
                     </Link>
                   </div>
@@ -289,7 +330,7 @@ export default function MatchScoreboard() {
           </div>
 
           {/* Toss & Bottom Text Banner */}
-          <div className="text-center text-xs font-semibold text-gold-450 border-t border-dark-850 mt-6 pt-4">
+          <div className="text-center text-xs font-bold text-neon-yellow neon-text-glow border-t border-dark-850 mt-6 pt-4">
             {match.tossText || 'Toss Information Pending'}
           </div>
 
@@ -299,13 +340,13 @@ export default function MatchScoreboard() {
         {isCricket && cState && match.status === 'live' && (
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Batsmen On Crease */}
-            <div className="glass-panel p-5 rounded-xl border-gold-500/10 flex flex-col justify-between">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-500/70 border-b border-dark-800 pb-2 mb-3">Batsmen on Crease</h3>
+            <div className="glass-panel p-5 rounded-xl border-neon-yellow/10 flex flex-col justify-between">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow/70 border-b border-dark-800 pb-2 mb-3">Batsmen on Crease</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <span className={`font-bold flex items-center gap-1.5 ${cState.strikerId ? 'text-white' : 'text-dark-400'}`}>
                     {cState.strikerId ? getPlayerName(cState.strikerId) : 'Select Striker'}
-                    {cState.strikerId && <span className="text-gold-500 text-[10px] font-bold animate-pulse">★</span>}
+                    {cState.strikerId && <span className="text-neon-yellow text-[10px] font-bold animate-pulse">★</span>}
                   </span>
                   <span className="font-bold text-white">
                     {cState.batsmenStats.find(b => b.playerId === cState.strikerId)?.runs || 0}
@@ -325,8 +366,8 @@ export default function MatchScoreboard() {
             </div>
 
             {/* Bowler / Partnership */}
-            <div className="glass-panel p-5 rounded-xl border-gold-500/10 flex flex-col justify-between">
-              <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-500/70 border-b border-dark-800 pb-2 mb-3">Active Bowler & Partnership</h3>
+            <div className="glass-panel p-5 rounded-xl border-neon-yellow/10 flex flex-col justify-between">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow/70 border-b border-dark-800 pb-2 mb-3">Active Bowler & Partnership</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-dark-400">Current Bowler:</span>
@@ -355,7 +396,7 @@ export default function MatchScoreboard() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`pb-3 text-xs font-bold uppercase tracking-wider relative transition-all ${
-                activeTab === tab ? 'text-gold-400' : 'text-dark-400 hover:text-white'
+                activeTab === tab ? 'text-neon-yellow neon-text-glow' : 'text-dark-400 hover:text-white'
               }`}
             >
               <span>
@@ -364,7 +405,7 @@ export default function MatchScoreboard() {
                 {tab === 'info' && 'Match Info'}
               </span>
               {activeTab === tab && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 gold-gradient-bg" />
+                <span className="absolute bottom-0 left-0 w-full h-0.5 neon-gradient-bg neon-glow" />
               )}
             </button>
           ))}
@@ -377,9 +418,9 @@ export default function MatchScoreboard() {
               <div className="space-y-6">
                 
                 {/* Innings Batsmen table */}
-                <div className="glass-panel rounded-xl overflow-hidden border border-gold-500/10">
+                <div className="glass-panel rounded-xl overflow-hidden border border-neon-yellow/10">
                   <div className="px-5 py-3.5 bg-dark-950/60 border-b border-dark-800 flex justify-between items-center">
-                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-400">
+                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow">
                       Innings {cState.innings} Batting Card
                     </h3>
                   </div>
@@ -401,7 +442,7 @@ export default function MatchScoreboard() {
                           <tr key={b.playerId} className="hover:bg-dark-900/30">
                             <td className="px-6 py-3.5 font-bold text-white flex items-center space-x-1.5">
                               <span>{b.name}</span>
-                              {b.playerId === cState.strikerId && <span className="text-gold-500 animate-pulse">★</span>}
+                              {b.playerId === cState.strikerId && <span className="text-neon-yellow animate-pulse">★</span>}
                             </td>
                             <td className="px-6 py-3.5 text-dark-400 font-medium italic">
                               {b.out ? (b.howOut || 'out') : 'not out'}
@@ -410,7 +451,7 @@ export default function MatchScoreboard() {
                             <td className="px-6 py-3.5 text-center font-medium text-dark-300">{b.balls}</td>
                             <td className="px-6 py-3.5 text-center font-medium text-dark-400">{b.fours}</td>
                             <td className="px-6 py-3.5 text-center font-medium text-dark-400">{b.sixes}</td>
-                            <td className="px-6 py-3.5 text-center font-bold text-gold-500/90">
+                            <td className="px-6 py-3.5 text-center font-bold text-neon-yellow">
                               {b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0'}
                             </td>
                           </tr>
@@ -421,9 +462,9 @@ export default function MatchScoreboard() {
                 </div>
 
                 {/* Bowlers table */}
-                <div className="glass-panel rounded-xl overflow-hidden border border-gold-500/10">
+                <div className="glass-panel rounded-xl overflow-hidden border border-neon-yellow/10">
                   <div className="px-5 py-3.5 bg-dark-950/60 border-b border-dark-800">
-                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-400">
+                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow">
                       Innings {cState.innings} Bowling Card
                     </h3>
                   </div>
@@ -446,8 +487,8 @@ export default function MatchScoreboard() {
                             <td className="px-6 py-3.5 text-center font-bold text-white">{b.overs}</td>
                             <td className="px-6 py-3.5 text-center font-medium text-dark-300">{b.maidens}</td>
                             <td className="px-6 py-3.5 text-center font-medium text-red-400">{b.runs}</td>
-                            <td className="px-6 py-3.5 text-center font-extrabold text-emerald-400">{b.wickets}</td>
-                            <td className="px-6 py-3.5 text-center font-bold text-gold-500/90">
+                            <td className="px-6 py-3.5 text-center font-extrabold text-emerald-450">{b.wickets}</td>
+                            <td className="px-6 py-3.5 text-center font-bold text-neon-yellow">
                               {b.overs > 0 ? (b.runs / b.overs).toFixed(2) : '0.00'}
                             </td>
                           </tr>
@@ -459,8 +500,8 @@ export default function MatchScoreboard() {
 
                 {/* Fall of Wickets */}
                 {cState.fallOfWickets.length > 0 && (
-                  <div className="glass-panel p-5 rounded-xl border-gold-500/10">
-                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-400 border-b border-dark-800 pb-2.5 mb-3">Fall of Wickets</h3>
+                  <div className="glass-panel p-5 rounded-xl border-neon-yellow/10">
+                    <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow border-b border-dark-800 pb-2.5 mb-3">Fall of Wickets</h3>
                     <div className="flex flex-wrap gap-3 text-xs">
                       {cState.fallOfWickets.map((f, i) => (
                         <div key={i} className="bg-dark-900/60 border border-dark-850 px-3 py-1.5 rounded-lg flex flex-col">
@@ -477,10 +518,10 @@ export default function MatchScoreboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 
                 {/* Team A stats */}
-                <div className="glass-panel rounded-xl p-5 border border-gold-500/10">
+                <div className="glass-panel rounded-xl p-5 border border-neon-yellow/10">
                   <h3 className="text-sm font-bold text-white border-b border-dark-800 pb-3 mb-4 flex items-center justify-between">
                     <span>{match.teamA.name} Stats</span>
-                    <span className="text-gold-500 font-extrabold text-lg">{kState.scoreA}</span>
+                    <span className="text-neon-yellow font-extrabold text-lg">{kState.scoreA}</span>
                   </h3>
                   
                   <div className="space-y-3 text-xs">
@@ -504,10 +545,10 @@ export default function MatchScoreboard() {
                 </div>
 
                 {/* Team B stats */}
-                <div className="glass-panel rounded-xl p-5 border border-gold-500/10">
+                <div className="glass-panel rounded-xl p-5 border border-neon-yellow/10">
                   <h3 className="text-sm font-bold text-white border-b border-dark-800 pb-3 mb-4 flex items-center justify-between">
                     <span>{match.teamB.name} Stats</span>
-                    <span className="text-gold-500 font-extrabold text-lg">{kState.scoreB}</span>
+                    <span className="text-neon-yellow font-extrabold text-lg">{kState.scoreB}</span>
                   </h3>
                   
                   <div className="space-y-3 text-xs">
@@ -541,8 +582,8 @@ export default function MatchScoreboard() {
 
         {/* Ball By Ball / Raid Timeline Tab Content */}
         {activeTab === 'ballbyball' && (
-          <div className="glass-panel p-5 rounded-xl border-gold-500/10 max-h-[500px] overflow-y-auto">
-            <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-400 border-b border-dark-800 pb-3 mb-5">
+          <div className="glass-panel p-5 rounded-xl border-neon-yellow/10 max-h-[500px] overflow-y-auto">
+            <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow border-b border-dark-800 pb-3 mb-5">
               {isCricket ? 'Live Commentary Feed' : 'Raid Action Timeline'}
             </h3>
 
@@ -553,7 +594,7 @@ export default function MatchScoreboard() {
                 <div className="space-y-4">
                   {[...match.ballByBall].reverse().map((ball, i) => (
                     <div key={i} className="flex items-start space-x-4 text-xs border-b border-dark-900 pb-3 last:border-0 last:pb-0">
-                      <div className="flex-shrink-0 bg-gold-500/10 text-gold-400 border border-gold-500/25 px-2 py-1 rounded text-center w-14 font-extrabold">
+                      <div className="flex-shrink-0 bg-neon-yellow/10 text-neon-yellow border border-neon-yellow/25 px-2 py-1 rounded text-center w-14 font-extrabold">
                         {ball.overNum}.{ball.ballNum}
                       </div>
                       <div className="flex-grow">
@@ -563,7 +604,7 @@ export default function MatchScoreboard() {
                       <div className="flex-shrink-0 text-right">
                         <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-extrabold ${
                           ball.runs === 4 || ball.runs === 6
-                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/35'
+                            ? 'bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/35'
                             : ball.wicket
                             ? 'bg-red-500/15 text-red-400 border border-red-500/35'
                             : 'bg-dark-900 text-dark-350'
@@ -586,10 +627,10 @@ export default function MatchScoreboard() {
                         {Math.floor(act.timeRemaining / 60)}:{(act.timeRemaining % 60).toString().padStart(2, '0')}
                       </div>
                       <div className="flex-grow">
-                        <p className="font-bold text-white uppercase tracking-wider text-[10px] text-gold-450">{act.type.replace('_', ' ')}</p>
+                        <p className="font-bold text-white uppercase tracking-wider text-[10px] text-neon-yellow">{act.type.replace('_', ' ')}</p>
                         <p className="text-dark-300 mt-0.5">{act.description}</p>
                       </div>
-                      <div className="flex-shrink-0 text-right font-extrabold text-emerald-400 text-sm">
+                      <div className="flex-shrink-0 text-right font-extrabold text-emerald-450 text-sm">
                         +{act.points} pts
                       </div>
                     </div>
@@ -602,8 +643,8 @@ export default function MatchScoreboard() {
 
         {/* Match Info Tab */}
         {activeTab === 'info' && (
-          <div className="glass-panel p-5 rounded-xl border border-gold-500/10 space-y-4 text-xs">
-            <h3 className="text-xs font-extrabold uppercase tracking-widest text-gold-400 border-b border-dark-800 pb-2 mb-3">Event Metadata</h3>
+          <div className="glass-panel p-5 rounded-xl border border-neon-yellow/10 space-y-4 text-xs">
+            <h3 className="text-xs font-extrabold uppercase tracking-widest text-neon-yellow border-b border-dark-800 pb-2 mb-3">Event Metadata</h3>
             
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2.5">
@@ -613,7 +654,7 @@ export default function MatchScoreboard() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-dark-900">
                   <span className="text-dark-450">Sport Format:</span>
-                  <span className="font-bold text-gold-400 capitalize">{match.sport}</span>
+                  <span className="font-bold text-neon-yellow capitalize">{match.sport}</span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-dark-450">Scheduled Date:</span>
@@ -631,8 +672,8 @@ export default function MatchScoreboard() {
                   <span className="font-bold text-white">{match.tossText || 'Pending'}</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-dark-450">Match Winner:</span>
-                  <span className="font-bold text-emerald-400">{match.winnerId ? (match.winnerId === match.teamA.id ? match.teamA.name : match.teamB.name) : 'Unresolved'}</span>
+                  <span className="text-neon-yellow">Match Winner:</span>
+                  <span className="font-bold text-emerald-450">{match.winnerId ? (match.winnerId === match.teamA.id ? match.teamA.name : match.teamB.name) : 'Unresolved'}</span>
                 </div>
               </div>
             </div>

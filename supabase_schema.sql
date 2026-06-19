@@ -141,3 +141,6 @@ DROP POLICY IF EXISTS "Allow write access for authenticated users" ON public.mat
 DROP POLICY IF EXISTS "Allow public write access" ON public.matches;
 CREATE POLICY "Allow public write access" ON public.matches
   FOR ALL USING (true) WITH CHECK (true);
+
+-- Enable Supabase Realtime replication for the matches table to power live under-1-second updates
+alter publication supabase_realtime add table matches;

@@ -93,3 +93,34 @@ body {
 .glow-purple-lg {
   box-shadow: 0 0 40px rgba(124, 58, 237, 0.4);
 }
+
+/* Neon Electric Yellow styling utilities */
+.neon-border {
+  border-color: rgba(238, 248, 36, 0.45);
+}
+.neon-glow {
+  box-shadow: 0 0 15px rgba(238, 248, 36, 0.35);
+}
+.neon-glow-lg {
+  box-shadow: 0 0 35px rgba(238, 248, 36, 0.55);
+}
+.neon-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 50%, #eef824 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.neon-gradient-bg {
+  background: linear-gradient(135deg, #fef08a 0%, #eef824 50%, #ca8a04 100%);
+}
+.neon-text-glow {
+  text-shadow: 0 0 8px rgba(238, 248, 36, 0.65);
+}
+.text-neon-yellow {
+  color: #eef824;
+}
+.bg-neon-yellow {
+  background-color: #eef824;
+}
+.border-neon-yellow {
+  border-color: #eef824;
+}

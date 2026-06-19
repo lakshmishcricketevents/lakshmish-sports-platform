@@ -166,16 +166,18 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-3">
-            {(userRole === 'admin' || userRole === 'scorer') && (
-              <Link
-                href="/admin"
-                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center space-x-1.5"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Enter Admin Panel</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            )}
+            <Link
+              href="/admin"
+              className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center space-x-1.5"
+            >
+              <Shield className="w-4 h-4" />
+              <span>
+                {userRole === 'admin' || userRole === 'scorer'
+                  ? 'Enter Admin Panel'
+                  : 'Unlock Admin Panel'}
+              </span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
 
             <button
               onClick={handleLogout}

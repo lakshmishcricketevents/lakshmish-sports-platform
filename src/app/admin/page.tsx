@@ -197,12 +197,28 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passphrase === 'admin123') {
       setAuthorized(true);
       localStorage.setItem('lce_admin_auth', 'true');
       setErrorMsg('');
+      
+      // Auto promote active Google/Supabase user session to 'admin' in profiles table
+      if (isSupabaseConfigured) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            await supabase
+              .from('profiles')
+              .update({ role: 'admin' })
+              .eq('id', session.user.id);
+            addLog(`System: Self-healed role to 'admin' for user ${session.user.email}`);
+          }
+        } catch (err) {
+          console.warn('Failed to self-heal user role:', err);
+        }
+      }
       fetchAdminData();
     } else {
       setErrorMsg('Invalid administrative passphrase.');

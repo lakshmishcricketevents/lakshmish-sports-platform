@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import Link from 'next/link';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Lock, Mail, User, Shield, Play } from 'lucide-react';
 
@@ -262,6 +263,22 @@ function LoginContent() {
         </div>
       )}
 
+      {/* Local Dev Admin Bypass (only shown on localhost/127.0.0.1) */}
+      {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+        <div className="mt-4 p-4 bg-purple-950/20 border border-purple-500/35 rounded-xl text-center space-y-2">
+          <p className="text-[9px] text-purple-400 font-black uppercase tracking-widest leading-none mb-1">Local Development Mode</p>
+          <button
+            onClick={() => {
+              localStorage.setItem('lce_admin_auth', 'true');
+              router.push('/admin');
+            }}
+            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-lg shadow-purple-500/15"
+          >
+            Dev Login (Local Admin Bypass)
+          </button>
+        </div>
+      )}
+
       <div className="mt-5 border-t border-dark-850 pt-4 flex flex-col items-center space-y-2 text-[10px] font-bold text-dark-400 uppercase">
 
         {mode === 'signin' ? (
@@ -272,13 +289,16 @@ function LoginContent() {
             <button onClick={() => setMode('forgot')} className="hover:text-purple-400 transition-colors text-[9px]">
               Forgot Password?
             </button>
+            <Link href="/admin" className="hover:text-purple-405 text-purple-400 transition-colors text-[9px] mt-1 text-center font-extrabold tracking-wider">
+              Scoring Admin Console
+            </Link>
           </>
         ) : mode === 'signup' ? (
           <button onClick={() => setMode('signin')} className="hover:text-purple-400 transition-colors">
             Already registered? <span className="text-purple-400 font-extrabold">Sign In</span>
           </button>
         ) : (
-          <button onClick={() => setMode('signin')} className="hover:text-purple-400 transition-colors">
+          <button onClick={() => setMode('signin')} className="hover:text-purple-405 text-purple-400 transition-colors">
             Back to <span className="text-purple-400 font-extrabold">Sign In</span>
           </button>
         )}

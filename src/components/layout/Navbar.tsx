@@ -13,11 +13,19 @@ export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isLocalAdmin, setIsLocalAdmin] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: '1', title: 'Bengaluru Royals vs Mumbai Spartans is LIVE', desc: 'Cricket • Innings 1, 15.4 Overs', time: '10m ago', unread: true },
     { id: '2', title: 'Fazel Atrachali completed Super Tackle', desc: 'Kabaddi • Golden Warriors enforce ALL OUT', time: '40m ago', unread: true },
     { id: '3', title: 'Broadcaster connected Ground Camera stream', desc: 'System • WebRTC stream node online', time: '1h ago', unread: false }
   ]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsLocalAdmin(localStorage.getItem('lce_admin_auth') === 'true');
+    }
+  }, [session, role]);
+
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -129,11 +137,12 @@ export default function Navbar() {
   ];
 
   if (session) {
-    if (role === 'admin' || role === 'scorer') {
-      navLinks.push({ href: '/admin', label: 'Admin', icon: Shield });
-    }
+    navLinks.push({ href: '/admin', label: 'Admin', icon: Shield });
     navLinks.push({ href: '/profile', label: 'Profile', icon: User });
   } else {
+    if (isLocalAdmin) {
+      navLinks.push({ href: '/admin', label: 'Admin', icon: Shield });
+    }
     navLinks.push({ href: '/login', label: 'Login', icon: User });
   }
 

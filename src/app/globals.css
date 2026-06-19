@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold-50: #fefdf6;
+  --color-gold-100: #fdfbe7;
+  --color-gold-200: #faf4c2;
+  --color-gold-300: #f5e78e;
+  --color-gold-400: #eed352;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #b89127;
+  --color-gold-700: #946e1e;
+  --color-gold-800: #75541c;
+  --color-gold-900: #60451a;
+  --color-gold-950: #38250b;
+
+  --color-dark-50: #f6f6f7;
+  --color-dark-100: #e2e2e5;
+  --color-dark-200: #c4c4ca;
+  --color-dark-300: #9e9ea7;
+  --color-dark-400: #757580;
+  --color-dark-500: #5c5c66;
+  --color-dark-600: #43434b;
+  --color-dark-700: #2b2b31;
+  --color-dark-800: #1a1a1e;
+  --color-dark-900: #111113;
+  --color-dark-950: #080809;
+
+  --animate-pulse-gold: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-glow: glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 4px rgba(212, 175, 55, 0.2);
+  }
+}
+
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 4px rgba(212, 175, 55, 0.4);
+  }
+  100% {
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 25px rgba(212, 175, 55, 0.4);
+  }
+}
+
+body {
+  background-color: #080809;
+  color: #e2e2e5;
+  font-family: 'Outfit', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Premium Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080809;
+}
+::-webkit-scrollbar-thumb {
+  background: #2b2b31;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(17, 17, 19, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(212, 175, 55, 0.1), inset 0 0 12px rgba(212, 175, 55, 0.05);
+  transform: translateY(-2px);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #f5e78e 50%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #f5e78e 0%, #d4af37 50%, #b89127 100%);
+}
+
+.gold-border {
+  border-color: #d4af37;
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+.glow-gold-lg {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+}

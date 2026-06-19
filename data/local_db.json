@@ -1,0 +1,830 @@
+{
+  "tournaments": [
+    {
+      "id": "tour-1",
+      "name": "Lakshmish Gold League 2026",
+      "logo": "https://img.icons8.com/color/120/gold-medal.png",
+      "sport": "cricket",
+      "rules": "20 Overs T20 format, standard ICC rules. Professional neutral umpires.",
+      "status": "active",
+      "teams": [
+        "t1",
+        "t2",
+        "t3"
+      ],
+      "fixtures": [
+        "m1",
+        "m2",
+        "m-1781785948696"
+      ],
+      "pointsTable": [
+        {
+          "teamId": "t1",
+          "teamName": "ಕೊರಟಗೆರೆ | Koratagere",
+          "logo": "/mascot_lion.png",
+          "played": 1,
+          "won": 1,
+          "lost": 0,
+          "tied": 0,
+          "points": 2,
+          "netRunRate": 1.25
+        },
+        {
+          "teamId": "t2",
+          "teamName": "Mumbai Spartans",
+          "logo": "https://img.icons8.com/color/120/viking-helmet.png",
+          "played": 1,
+          "won": 0,
+          "lost": 1,
+          "tied": 0,
+          "points": 0,
+          "netRunRate": -1.25
+        },
+        {
+          "teamId": "t3",
+          "teamName": "Delhi Titans",
+          "logo": "https://img.icons8.com/color/120/sword.png",
+          "played": 0,
+          "won": 0,
+          "lost": 0,
+          "tied": 0,
+          "points": 0,
+          "netRunRate": 0
+        }
+      ]
+    },
+    {
+      "id": "tour-2",
+      "name": "Lakshmish Pro Kabaddi League",
+      "logo": "https://img.icons8.com/color/120/crown.png",
+      "sport": "kabaddi",
+      "rules": "40 Minutes match (20-min halves). 7 active players on court.",
+      "status": "active",
+      "teams": [
+        "t4"
+      ],
+      "fixtures": [
+        "m3"
+      ],
+      "pointsTable": [
+        {
+          "teamId": "t4",
+          "teamName": "Golden Warriors",
+          "logo": "https://img.icons8.com/color/120/spartan-helmet.png",
+          "played": 1,
+          "won": 1,
+          "lost": 0,
+          "tied": 0,
+          "points": 5,
+          "scoreDiff": 15
+        }
+      ]
+    }
+  ],
+  "teams": [
+    {
+      "id": "t1",
+      "name": "Bengaluru Royals",
+      "logo": "https://img.icons8.com/color/120/shield.png",
+      "players": [
+        "p1",
+        "p3"
+      ],
+      "captainId": "p1",
+      "viceCaptainId": "p3",
+      "purse": 1500,
+      "stats": {
+        "matchesPlayed": 10,
+        "won": 7,
+        "lost": 3,
+        "tied": 0,
+        "points": 14
+      }
+    },
+    {
+      "id": "t2",
+      "name": "Mumbai Spartans",
+      "logo": "https://img.icons8.com/color/120/viking-helmet.png",
+      "players": [
+        "p2",
+        "p5"
+      ],
+      "captainId": "p5",
+      "viceCaptainId": "p2",
+      "purse": 1500,
+      "stats": {
+        "matchesPlayed": 10,
+        "won": 6,
+        "lost": 4,
+        "tied": 0,
+        "points": 12
+      }
+    },
+    {
+      "id": "t3",
+      "name": "Delhi Titans",
+      "logo": "https://img.icons8.com/color/120/sword.png",
+      "players": [
+        "p4",
+        "p6"
+      ],
+      "captainId": "p4",
+      "viceCaptainId": "p6",
+      "purse": 1500,
+      "stats": {
+        "matchesPlayed": 10,
+        "won": 4,
+        "lost": 6,
+        "tied": 0,
+        "points": 8
+      }
+    },
+    {
+      "id": "t4",
+      "name": "Golden Warriors",
+      "logo": "https://img.icons8.com/color/120/spartan-helmet.png",
+      "players": [
+        "p7",
+        "p8",
+        "p9"
+      ],
+      "captainId": "p7",
+      "viceCaptainId": "p8",
+      "purse": 1200,
+      "stats": {
+        "matchesPlayed": 5,
+        "won": 4,
+        "lost": 1,
+        "tied": 0,
+        "points": 8
+      }
+    }
+  ],
+  "players": [
+    {
+      "id": "p1",
+      "name": "Virat Kohli",
+      "photo": "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=150&h=150&fit=crop",
+      "role": "Batsman",
+      "auctionBaseValue": 200,
+      "soldValue": 0,
+      "mvpPoints": 850,
+      "stats": {
+        "cricket": {
+          "runs": 12500,
+          "wickets": 4,
+          "matches": 280,
+          "strikeRate": 138.5,
+          "economy": 6.2
+        }
+      }
+    },
+    {
+      "id": "p2",
+      "name": "Jasprit Bumrah",
+      "photo": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop",
+      "role": "Bowler",
+      "auctionBaseValue": 200,
+      "soldValue": 0,
+      "mvpPoints": 920,
+      "stats": {
+        "cricket": {
+          "runs": 300,
+          "wickets": 350,
+          "matches": 160,
+          "strikeRate": 22.1,
+          "economy": 4.8
+        }
+      }
+    },
+    {
+      "id": "p3",
+      "name": "Hardik Pandya",
+      "photo": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&h=150&fit=crop",
+      "role": "All-Rounder",
+      "auctionBaseValue": 150,
+      "soldValue": 0,
+      "mvpPoints": 780,
+      "stats": {
+        "cricket": {
+          "runs": 3400,
+          "wickets": 120,
+          "matches": 140,
+          "strikeRate": 142,
+          "economy": 7.9
+        }
+      }
+    },
+    {
+      "id": "p4",
+      "name": "Rishabh Pant",
+      "photo": "https://images.unsplash.com/photo-1527983359383-4758693f760c?w=150&h=150&fit=crop",
+      "role": "Wicketkeeper",
+      "auctionBaseValue": 150,
+      "soldValue": 0,
+      "mvpPoints": 690,
+      "stats": {
+        "cricket": {
+          "runs": 2800,
+          "wickets": 0,
+          "matches": 98,
+          "strikeRate": 145.2,
+          "economy": 0
+        }
+      }
+    },
+    {
+      "id": "p5",
+      "name": "Rohit Sharma",
+      "photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+      "role": "Batsman",
+      "auctionBaseValue": 200,
+      "soldValue": 0,
+      "mvpPoints": 810,
+      "stats": {
+        "cricket": {
+          "runs": 10800,
+          "wickets": 8,
+          "matches": 260,
+          "strikeRate": 139.8,
+          "economy": 7.1
+        }
+      }
+    },
+    {
+      "id": "p6",
+      "name": "Rashid Khan",
+      "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop",
+      "role": "Bowler",
+      "auctionBaseValue": 180,
+      "soldValue": 0,
+      "mvpPoints": 890,
+      "stats": {
+        "cricket": {
+          "runs": 800,
+          "wickets": 280,
+          "matches": 150,
+          "strikeRate": 135,
+          "economy": 6.4
+        }
+      }
+    },
+    {
+      "id": "p7",
+      "name": "Pawan Sehrawat",
+      "photo": "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=150&h=150&fit=crop",
+      "role": "Raider",
+      "auctionBaseValue": 120,
+      "soldValue": 0,
+      "mvpPoints": 950,
+      "stats": {
+        "kabaddi": {
+          "raidPoints": 1050,
+          "tacklePoints": 40,
+          "matches": 110,
+          "superRaids": 32,
+          "superTackles": 2
+        }
+      }
+    },
+    {
+      "id": "p8",
+      "name": "Fazel Atrachali",
+      "photo": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop",
+      "role": "Defender",
+      "auctionBaseValue": 100,
+      "soldValue": 0,
+      "mvpPoints": 890,
+      "stats": {
+        "kabaddi": {
+          "raidPoints": 0,
+          "tacklePoints": 420,
+          "matches": 130,
+          "superRaids": 0,
+          "superTackles": 28
+        }
+      }
+    },
+    {
+      "id": "p9",
+      "name": "Naveen Kumar",
+      "photo": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop",
+      "role": "Raider",
+      "auctionBaseValue": 120,
+      "soldValue": 0,
+      "mvpPoints": 920,
+      "stats": {
+        "kabaddi": {
+          "raidPoints": 910,
+          "tacklePoints": 12,
+          "matches": 85,
+          "superRaids": 24,
+          "superTackles": 0
+        }
+      }
+    }
+  ],
+  "matches": [
+    {
+      "id": "m1",
+      "tournamentId": "tour-1",
+      "sport": "cricket",
+      "teamA": {
+        "id": "t1",
+        "name": "Bengaluru Royals",
+        "logo": "https://img.icons8.com/color/120/shield.png"
+      },
+      "teamB": {
+        "id": "t2",
+        "name": "Mumbai Spartans",
+        "logo": "https://img.icons8.com/color/120/viking-helmet.png"
+      },
+      "status": "live",
+      "tossText": "Bengaluru Royals won the toss and chose to bat first",
+      "date": "2026-06-18",
+      "cricketState": {
+        "innings": 1,
+        "battingTeamId": "t1",
+        "bowlingTeamId": "t2",
+        "runs": 148,
+        "wickets": 3,
+        "overs": 15,
+        "balls": 5,
+        "strikerId": "p1",
+        "nonStrikerId": "p3",
+        "currentBowlerId": "p2",
+        "batsmenStats": [
+          {
+            "playerId": "p1",
+            "name": "Virat Kohli",
+            "runs": 78,
+            "balls": 46,
+            "fours": 6,
+            "sixes": 4,
+            "out": false
+          },
+          {
+            "playerId": "p3",
+            "name": "Hardik Pandya",
+            "runs": 28,
+            "balls": 16,
+            "fours": 2,
+            "sixes": 2,
+            "out": false
+          }
+        ],
+        "bowlerStats": [
+          {
+            "playerId": "p2",
+            "name": "Jasprit Bumrah",
+            "overs": 3.5,
+            "maidens": 0,
+            "runs": 30,
+            "wickets": 1
+          }
+        ],
+        "partnership": {
+          "runs": 64,
+          "balls": 33,
+          "batterA": "Virat Kohli",
+          "batterB": "Hardik Pandya"
+        },
+        "fallOfWickets": [
+          {
+            "score": 40,
+            "wickets": 1,
+            "overs": 4,
+            "balls": 2,
+            "batsmanName": "Rohit Sharma"
+          },
+          {
+            "score": 84,
+            "wickets": 2,
+            "overs": 9,
+            "balls": 5,
+            "batsmanName": "Rishabh Pant"
+          }
+        ]
+      },
+      "ballByBall": [
+        {
+          "overNum": 15,
+          "ballNum": 1,
+          "bowlerName": "Jasprit Bumrah",
+          "batsmanName": "Virat Kohli",
+          "runs": 1,
+          "description": "Bumrah to Kohli, 1 run, pushed to long-on."
+        },
+        {
+          "overNum": 15,
+          "ballNum": 2,
+          "bowlerName": "Jasprit Bumrah",
+          "batsmanName": "Hardik Pandya",
+          "runs": 6,
+          "description": "Bumrah to Pandya, SIX, smashed over deep mid-wicket!"
+        },
+        {
+          "overNum": 15,
+          "ballNum": 3,
+          "bowlerName": "Jasprit Bumrah",
+          "batsmanName": "Hardik Pandya",
+          "runs": 0,
+          "description": "Bumrah to Pandya, no run, blockhole yorker."
+        },
+        {
+          "overNum": 15,
+          "ballNum": 4,
+          "bowlerName": "Jasprit Bumrah",
+          "batsmanName": "Hardik Pandya",
+          "runs": 4,
+          "description": "Bumrah to Pandya, FOUR, sliced behind point for boundary."
+        },
+        {
+          "overNum": 15,
+          "ballNum": 5,
+          "bowlerName": "Jasprit Bumrah",
+          "batsmanName": "Virat Kohli",
+          "runs": 6,
+          "extraType": "none",
+          "wicket": null,
+          "description": "Ball scored: 6 runs"
+        }
+      ],
+      "controlToken": "ctrl_h6nyy4t1d2_mqjm9dkl"
+    },
+    {
+      "id": "m2",
+      "tournamentId": "tour-1",
+      "sport": "cricket",
+      "teamA": {
+        "id": "t2",
+        "name": "Mumbai Spartans",
+        "logo": "https://img.icons8.com/color/120/viking-helmet.png"
+      },
+      "teamB": {
+        "id": "t3",
+        "name": "Delhi Titans",
+        "logo": "https://img.icons8.com/color/120/sword.png"
+      },
+      "status": "upcoming",
+      "date": "2026-06-20"
+    },
+    {
+      "id": "m3",
+      "tournamentId": "tour-2",
+      "sport": "kabaddi",
+      "teamA": {
+        "id": "t4",
+        "name": "Golden Warriors | Golden Warriors",
+        "logo": "/mascot_lion.png"
+      },
+      "teamB": {
+        "id": "t2",
+        "name": "Mumbai Spartans | Mumbai Spartans",
+        "logo": "/mascot_lion.png"
+      },
+      "status": "live",
+      "tossText": "Mumbai Spartans won the toss and chose court, Golden Warriors to raid first",
+      "date": "2026-06-18",
+      "kabaddiState": {
+        "scoreA": 0,
+        "scoreB": 0,
+        "raidPointsA": 0,
+        "tacklePointsA": 0,
+        "allOutPointsA": 0,
+        "extraPointsA": 0,
+        "raidPointsB": 0,
+        "tacklePointsB": 0,
+        "allOutPointsB": 0,
+        "extraPointsB": 0,
+        "timeRemaining": 2290,
+        "half": 2,
+        "timerRunning": true,
+        "raidTime": 30,
+        "raidTimerRunning": false,
+        "doOrDie": true,
+        "superTackle": false
+      },
+      "kabaddiActions": [],
+      "controlToken": "ctrl_3gh5m31tdh_mqjm9dkn"
+    },
+    {
+      "tournamentId": "tour-1",
+      "sport": "kabaddi",
+      "teamA": {
+        "id": "t1",
+        "logo": "/mascot_lion.png",
+        "name": "ಕೊರಟಗೆರೆ | Koratagere"
+      },
+      "teamB": {
+        "id": "t1",
+        "logo": "/mascot_bull.png",
+        "name": "ಬೆಂಗಳೂರು ರಾಯಲ್ಸ್ | Bengaluru Royals"
+      },
+      "status": "live",
+      "date": "2026-03-25",
+      "kabaddiState": {
+        "half": 1,
+        "scoreA": 14,
+        "scoreB": 6,
+        "doOrDie": false,
+        "raidTime": 30,
+        "originalId": "m-1781785948696",
+        "raidPointsA": 3,
+        "raidPointsB": 0,
+        "superTackle": false,
+        "extraPointsA": 9,
+        "extraPointsB": 0,
+        "timerRunning": false,
+        "allOutPointsA": 2,
+        "allOutPointsB": 0,
+        "tacklePointsA": 0,
+        "tacklePointsB": 6,
+        "timeRemaining": 600,
+        "raidTimerRunning": false,
+        "firstHalfDuration": 600,
+        "raidAudioPlayState": "stopped",
+        "secondHalfDuration": 300
+      },
+      "kabaddiActions": [
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1930
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: -1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: -1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: -1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Direct point correction: -1 to Bengaluru Royals",
+          "timeRemaining": 1920
+        },
+        {
+          "type": "raid_success",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:04 am",
+          "description": "Raid Point scored by Bengaluru Royals",
+          "timeRemaining": 1910
+        },
+        {
+          "type": "all_out",
+          "points": 2,
+          "teamId": "t1",
+          "timestamp": "04:05 am",
+          "description": "ALL OUT Enforced by Bengaluru Royals!",
+          "timeRemaining": 1890
+        },
+        {
+          "type": "raid_tackled",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:06 am",
+          "description": "Tackle Point secured by Bengaluru Royals",
+          "timeRemaining": 1890
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:20 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:20 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "04:20 am",
+          "description": "Direct point correction: -1 to Bengaluru Royals",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:20 am",
+          "description": "Direct point correction: +1 to Koratagere",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:20 am",
+          "description": "Direct point correction: +1 to Koratagere",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:20 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:38 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "super_tackle",
+          "points": 2,
+          "teamId": "t1",
+          "timestamp": "04:39 am",
+          "description": "Super Tackle completed by Koratagere!",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "04:39 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1820
+        },
+        {
+          "type": "technical",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "05:22 am",
+          "description": "Direct point correction: +1 to Bengaluru Royals",
+          "timeRemaining": 1710
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "05:22 am",
+          "description": "Direct point correction: -1 to Koratagere",
+          "timeRemaining": 1710
+        },
+        {
+          "type": "technical",
+          "points": -1,
+          "teamId": "t1",
+          "timestamp": "05:22 am",
+          "description": "Direct point correction: -1 to Koratagere",
+          "timeRemaining": 1710
+        },
+        {
+          "type": "super_tackle",
+          "points": 2,
+          "teamId": "t1",
+          "timestamp": "05:26 am",
+          "description": "Super Tackle completed by Bengaluru Royals!",
+          "timeRemaining": 600
+        },
+        {
+          "type": "raid_tackled",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "05:26 am",
+          "description": "Tackle Point secured by Bengaluru Royals",
+          "timeRemaining": 600
+        },
+        {
+          "type": "bonus",
+          "points": 1,
+          "teamId": "t1",
+          "timestamp": "05:26 am",
+          "description": "Bonus Point secured by Bengaluru Royals",
+          "timeRemaining": 600
+        },
+        {
+          "timestamp": "05:27 am",
+          "timeRemaining": 600,
+          "type": "raid_success",
+          "teamId": "t1",
+          "points": 1,
+          "description": "Raid Point scored by Koratagere"
+        }
+      ],
+      "id": "m-1781785948696",
+      "controlToken": "ctrl_6tw8eppy51_mqjytea9"
+    }
+  ],
+  "auction": {
+    "currentBidPlayerId": null,
+    "currentHighestBid": 0,
+    "currentHighestBidTeamId": null,
+    "status": "idle",
+    "bids": []
+  },
+  "sponsors": [
+    {
+      "id": "s1",
+      "name": "Dream11 Mock",
+      "logo": "https://img.icons8.com/color/96/shield.png",
+      "link": "#"
+    },
+    {
+      "id": "s2",
+      "name": "Tata IPL Mock",
+      "logo": "https://img.icons8.com/color/96/trophy.png",
+      "link": "#"
+    },
+    {
+      "id": "s3",
+      "name": "RedBull Esports",
+      "logo": "https://img.icons8.com/color/96/bull.png",
+      "link": "#"
+    }
+  ]
+}

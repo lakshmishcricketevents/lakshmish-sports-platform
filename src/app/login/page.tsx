@@ -42,6 +42,11 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     // If user is already authenticated, redirect to target path
@@ -264,7 +269,7 @@ function LoginContent() {
       )}
 
       {/* Local Dev Admin Bypass (only shown on localhost/127.0.0.1) */}
-      {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+      {isMounted && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
         <div className="mt-4 p-4 bg-purple-950/20 border border-purple-500/35 rounded-xl text-center space-y-2">
           <p className="text-[9px] text-purple-400 font-black uppercase tracking-widest leading-none mb-1">Local Development Mode</p>
           <button

@@ -496,8 +496,28 @@ export default function CameraStreamReceiver({ token, name, resolution, baseUrl 
           <span>Target Connection Stream URL:</span>
           <button
             onClick={() => {
-              navigator.clipboard.writeText(captureUrl);
-              alert('Capture URL copied to clipboard.');
+              const doCopy = () => {
+                try {
+                  const textArea = document.createElement('textarea');
+                  textArea.value = captureUrl;
+                  textArea.style.position = 'fixed';
+                  textArea.style.opacity = '0';
+                  document.body.appendChild(textArea);
+                  textArea.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(textArea);
+                  alert('Capture URL copied to clipboard.');
+                } catch (err) {
+                  alert('Could not copy URL: ' + captureUrl);
+                }
+              };
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(captureUrl)
+                  .then(() => alert('Capture URL copied to clipboard.'))
+                  .catch(() => doCopy());
+              } else {
+                doCopy();
+              }
             }}
             className="text-gold-500 hover:underline font-bold"
           >

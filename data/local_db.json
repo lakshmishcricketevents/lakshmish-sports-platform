@@ -19,7 +19,7 @@
       ],
       "pointsTable": [
         {
-          "teamId": "t1",
+          "teamId": "t5",
           "teamName": "ಕೊರಟಗೆರೆ | Koratagere",
           "logo": "/mascot_lion.png",
           "played": 1,
@@ -512,7 +512,7 @@
       "tournamentId": "tour-1",
       "sport": "kabaddi",
       "teamA": {
-        "id": "t1",
+        "id": "t5",
         "logo": "/mascot_lion.png",
         "name": "ಕೊರಟಗೆರೆ | Koratagere"
       },
@@ -524,27 +524,35 @@
       "status": "live",
       "date": "2026-03-25",
       "kabaddiState": {
-        "half": 1,
-        "scoreA": 14,
-        "scoreB": 6,
+        "half": 2,
+        "scoreA": 47,
+        "scoreB": 10,
         "doOrDie": false,
         "raidTime": 30,
         "originalId": "m-1781785948696",
-        "raidPointsA": 3,
+        "raidPointsA": 31,
         "raidPointsB": 0,
         "superTackle": false,
-        "extraPointsA": 9,
+        "extraPointsA": 10,
         "extraPointsB": 0,
-        "timerRunning": false,
-        "allOutPointsA": 2,
+        "timerRunning": true,
+        "allOutPointsA": 6,
         "allOutPointsB": 0,
+        "raidingTeamId": "t5",
         "tacklePointsA": 0,
-        "tacklePointsB": 6,
-        "timeRemaining": 600,
+        "tacklePointsB": 10,
+        "timeRemaining": 870,
+        "activeAnimation": {
+          "type": "safe_raid",
+          "timestamp": 1781892030439
+        },
+        "stadiumAmbience": true,
         "raidTimerRunning": false,
-        "firstHalfDuration": 600,
+        "firstHalfDuration": 300,
         "raidAudioPlayState": "stopped",
-        "secondHalfDuration": 300
+        "secondHalfDuration": 300,
+        "consecutiveEmptyRaidsA": 1,
+        "consecutiveEmptyRaidsB": 0
       },
       "kabaddiActions": [
         {
@@ -694,7 +702,7 @@
         {
           "type": "technical",
           "points": 1,
-          "teamId": "t1",
+          "teamId": "t5",
           "timestamp": "04:20 am",
           "description": "Direct point correction: +1 to Koratagere",
           "timeRemaining": 1820
@@ -702,7 +710,7 @@
         {
           "type": "technical",
           "points": 1,
-          "teamId": "t1",
+          "teamId": "t5",
           "timestamp": "04:20 am",
           "description": "Direct point correction: +1 to Koratagere",
           "timeRemaining": 1820
@@ -726,7 +734,7 @@
         {
           "type": "super_tackle",
           "points": 2,
-          "teamId": "t1",
+          "teamId": "t5",
           "timestamp": "04:39 am",
           "description": "Super Tackle completed by Koratagere!",
           "timeRemaining": 1820
@@ -750,7 +758,7 @@
         {
           "type": "technical",
           "points": -1,
-          "teamId": "t1",
+          "teamId": "t5",
           "timestamp": "05:22 am",
           "description": "Direct point correction: -1 to Koratagere",
           "timeRemaining": 1710
@@ -758,7 +766,7 @@
         {
           "type": "technical",
           "points": -1,
-          "teamId": "t1",
+          "teamId": "t5",
           "timestamp": "05:22 am",
           "description": "Direct point correction: -1 to Koratagere",
           "timeRemaining": 1710
@@ -791,7 +799,7 @@
           "timestamp": "05:27 am",
           "timeRemaining": 600,
           "type": "raid_success",
-          "teamId": "t1",
+          "teamId": "t5",
           "points": 1,
           "description": "Raid Point scored by Koratagere"
         }

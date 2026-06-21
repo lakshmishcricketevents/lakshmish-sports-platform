@@ -119,6 +119,51 @@ export interface CricketState {
   }>;
 }
 
+export interface TournamentProfile {
+  venue?: string;
+  organizer?: string;
+  contactNumber?: string;
+  dates?: string;
+}
+
+export interface BrandingPreset {
+  name: string;
+  showLakshmishLogo: boolean;
+  showTournamentLogo: boolean;
+  showSponsorLogo: boolean;
+  tournamentName?: string;
+  presenterText: string;
+  tournamentLogo?: string;
+  lakshmishLogo?: string;
+  sponsorLogos?: string[];
+  sponsorSubtitles?: string[];
+  backgroundImage?: string;
+  logoPosition: 'top-left' | 'top-right' | 'center' | 'bottom-left' | 'bottom-right';
+  logoSize: number;
+  sponsorPosition: 'top-left' | 'top-right' | 'center' | 'bottom-left' | 'bottom-right';
+  sponsorSize: number;
+  primaryColor?: string;
+  secondaryColor?: string;
+  sponsorBorderColor?: string;
+  sponsorBorderShape?: 'circle' | 'square';
+  sponsorBorderThickness?: number;
+  sponsorGlow?: boolean;
+  sponsorType?: 'single' | 'presented' | 'carousel';
+  layout?: {
+    logo?: { x: number; y: number; scale: number };
+    sponsor?: { x: number; y: number; scale: number };
+    banner?: { x: number; y: number; scale: number };
+    timer?: { x: number; y: number; scale: number };
+    raidTimer?: { x: number; y: number; scale: number };
+  };
+}
+
+export interface BrandingConfig extends Omit<BrandingPreset, 'name'> {
+  presets?: BrandingPreset[];
+  profile?: TournamentProfile;
+  isLocked?: boolean;
+}
+
 export interface KabaddiState {
   scoreA: number;
   scoreB: number;
@@ -139,6 +184,17 @@ export interface KabaddiState {
   doOrDie?: boolean;
   superTackle?: boolean;
   raidAudioPlayState?: 'playing' | 'paused' | 'stopped';
+  raidingTeamId?: string;
+  consecutiveEmptyRaidsA?: number;
+  consecutiveEmptyRaidsB?: number;
+  stadiumAmbience?: boolean;
+  activeAnimation?: {
+    type: 'safe_raid' | 'super_raid' | 'super_tackle' | 'all_out' | 'do_or_die' | 'timeout';
+    timestamp: number;
+  } | null;
+  activePlayersA?: number;
+  activePlayersB?: number;
+  branding?: BrandingConfig;
 }
 
 export interface Match {
@@ -636,7 +692,11 @@ function mapFromDb(dbMatch: any, originalIdFallback?: string): Match {
     date: dbMatch.date,
     controlToken: dbMatch.control_token,
     cricketState: parsedCricketState,
-    kabaddiState: parsedKabaddiState,
+    kabaddiState: parsedKabaddiState ? {
+      ...parsedKabaddiState,
+      activePlayersA: parsedKabaddiState.activePlayersA !== undefined ? parsedKabaddiState.activePlayersA : 7,
+      activePlayersB: parsedKabaddiState.activePlayersB !== undefined ? parsedKabaddiState.activePlayersB : 7
+    } : undefined,
     kabaddiActions: safeParse(dbMatch.kabaddi_actions) || [],
     ballByBall: safeParse(dbMatch.ball_by_ball) || []
   };

@@ -1,6 +1,192 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, CricketState, KabaddiState } from '@/lib/db';
 
+interface KabaddiAction {
+  timestamp: string;
+  timeRemaining: number;
+  type: string;
+  teamId: string;
+  points: number;
+  description: string;
+}
+
+// Helper to apply a single action to the Kabaddi state according to PKL rules
+function applyActionToState(
+  state: KabaddiState,
+  action: Omit<KabaddiAction, 'timestamp' | 'timeRemaining'>,
+  teamAId: string,
+  teamBId: string,
+  teamAName: string,
+  teamBName: string
+) {
+  const isTeamA = action.teamId === teamAId;
+  const type = action.type;
+  const points = action.points;
+
+  // Initialize values if they are undefined
+  if (state.activePlayersA === undefined || state.activePlayersA === null) state.activePlayersA = 7;
+  if (state.activePlayersB === undefined || state.activePlayersB === null) state.activePlayersB = 7;
+  if (state.consecutiveEmptyRaidsA === undefined) state.consecutiveEmptyRaidsA = 0;
+  if (state.consecutiveEmptyRaidsB === undefined) state.consecutiveEmptyRaidsB = 0;
+  if (state.raidPointsA === undefined) state.raidPointsA = 0;
+  if (state.raidPointsB === undefined) state.raidPointsB = 0;
+  if (state.tacklePointsA === undefined) state.tacklePointsA = 0;
+  if (state.tacklePointsB === undefined) state.tacklePointsB = 0;
+  if (state.allOutPointsA === undefined) state.allOutPointsA = 0;
+  if (state.allOutPointsB === undefined) state.allOutPointsB = 0;
+  if (state.extraPointsA === undefined) state.extraPointsA = 0;
+  if (state.extraPointsB === undefined) state.extraPointsB = 0;
+
+  if (type === 'raid_success') {
+    if (isTeamA) {
+      state.raidPointsA += points;
+      state.scoreA += points;
+      state.consecutiveEmptyRaidsA = 0;
+      
+      const defendersOut = points;
+      state.activePlayersB = Math.max(0, state.activePlayersB - defendersOut);
+      const ownRevived = Math.min(defendersOut, 7 - state.activePlayersA);
+      state.activePlayersA = Math.min(7, state.activePlayersA + ownRevived);
+      
+      state.raidingTeamId = teamBId; // Turn switches
+    } else {
+      state.raidPointsB += points;
+      state.scoreB += points;
+      state.consecutiveEmptyRaidsB = 0;
+      
+      const defendersOut = points;
+      state.activePlayersA = Math.max(0, state.activePlayersA - defendersOut);
+      const ownRevived = Math.min(defendersOut, 7 - state.activePlayersB);
+      state.activePlayersB = Math.min(7, state.activePlayersB + ownRevived);
+      
+      state.raidingTeamId = teamAId; // Turn switches
+    }
+  } else if (type === 'bonus') {
+    // Bonus check: must have >= 6 defenders on court
+    const defendersAvailable = isTeamA ? state.activePlayersB : state.activePlayersA;
+    if (defendersAvailable >= 6) {
+      if (isTeamA) {
+        state.raidPointsA += points;
+        state.scoreA += points;
+        state.consecutiveEmptyRaidsA = 0;
+        state.raidingTeamId = teamBId;
+      } else {
+        state.raidPointsB += points;
+        state.scoreB += points;
+        state.consecutiveEmptyRaidsB = 0;
+        state.raidingTeamId = teamAId;
+      }
+    }
+  } else if (type === 'raid_tackled' || type === 'super_tackle') {
+    // Note: in a tackle, the teamId in payload is the RAIDING team ID!
+    // So isTeamA === true means Team A was raiding, meaning Team B was defending and scored the tackle points.
+    let activePoints = points;
+    
+    if (isTeamA) { // Team A was raiding, Team B was defending
+      state.tacklePointsB += activePoints;
+      state.scoreB += activePoints;
+      state.consecutiveEmptyRaidsA = 0;
+      
+      // Raider is OUT, defending Team B revives 1
+      state.activePlayersA = Math.max(0, state.activePlayersA - 1);
+      state.activePlayersB = Math.min(7, state.activePlayersB + 1);
+      
+      state.raidingTeamId = teamBId; // Switch turn
+    } else { // Team B was raiding, Team A was defending
+      state.tacklePointsA += activePoints;
+      state.scoreA += activePoints;
+      state.consecutiveEmptyRaidsB = 0;
+      
+      // Raider is OUT, defending Team A revives 1
+      state.activePlayersB = Math.max(0, state.activePlayersB - 1);
+      state.activePlayersA = Math.min(7, state.activePlayersA + 1);
+      
+      state.raidingTeamId = teamAId; // Switch turn
+    }
+  } else if (type === 'raid_empty') {
+    if (isTeamA) {
+      state.consecutiveEmptyRaidsA = state.consecutiveEmptyRaidsA + 1;
+      state.raidingTeamId = teamBId;
+    } else {
+      state.consecutiveEmptyRaidsB = state.consecutiveEmptyRaidsB + 1;
+      state.raidingTeamId = teamAId;
+    }
+  } else if (type === 'all_out') {
+    if (isTeamA) { // Team A gets All Out points (+2), Team B is restored to 7
+      state.allOutPointsA += 2;
+      state.scoreA += 2;
+      state.activePlayersB = 7;
+      state.consecutiveEmptyRaidsA = 0;
+      state.consecutiveEmptyRaidsB = 0;
+      state.raidingTeamId = teamBId;
+    } else { // Team B gets All Out points (+2), Team A is restored to 7
+      state.allOutPointsB += 2;
+      state.scoreB += 2;
+      state.activePlayersA = 7;
+      state.consecutiveEmptyRaidsA = 0;
+      state.consecutiveEmptyRaidsB = 0;
+      state.raidingTeamId = teamAId;
+    }
+  } else if (type === 'technical') {
+    if (isTeamA) {
+      state.extraPointsA += points;
+      state.scoreA += points;
+    } else {
+      state.extraPointsB += points;
+      state.scoreB += points;
+    }
+  }
+
+  // Update Do-Or-Die state check for next turn
+  const nextRaidingTeamId = state.raidingTeamId;
+  const nextEmptyCount = nextRaidingTeamId === teamAId ? state.consecutiveEmptyRaidsA : state.consecutiveEmptyRaidsB;
+  if (nextEmptyCount >= 2) {
+    state.doOrDie = true;
+  } else {
+    state.doOrDie = false;
+  }
+}
+
+// Helper to check for 0 active players and apply an auto All Out
+function checkAndApplyAutoAllOut(
+  state: KabaddiState,
+  actions: any[],
+  teamAId: string,
+  teamBId: string,
+  teamAName: string,
+  teamBName: string
+) {
+  // Initialize values if they are undefined
+  if (state.activePlayersA === undefined || state.activePlayersA === null) state.activePlayersA = 7;
+  if (state.activePlayersB === undefined || state.activePlayersB === null) state.activePlayersB = 7;
+
+  if (state.activePlayersA === 0) {
+    const actObj = {
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timeRemaining: state.timeRemaining,
+      type: 'all_out' as const,
+      teamId: teamBId, // Enforcing team
+      points: 2,
+      description: `ALL OUT Enforced by ${teamBName}! (Auto)`
+    };
+    applyActionToState(state, actObj, teamAId, teamBId, teamAName, teamBName);
+    actions.push(actObj);
+    state.activeAnimation = { type: 'all_out', timestamp: Date.now() };
+  } else if (state.activePlayersB === 0) {
+    const actObj = {
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timeRemaining: state.timeRemaining,
+      type: 'all_out' as const,
+      teamId: teamAId, // Enforcing team
+      points: 2,
+      description: `ALL OUT Enforced by ${teamAName}! (Auto)`
+    };
+    applyActionToState(state, actObj, teamAId, teamBId, teamAName, teamBName);
+    actions.push(actObj);
+    state.activeAnimation = { type: 'all_out', timestamp: Date.now() };
+  }
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -405,68 +591,162 @@ export async function POST(
       const state = { ...match.kabaddiState };
       const actions = match.kabaddiActions ? [...match.kabaddiActions] : [];
 
-      if (action === 'kabaddi_points') {
-        const { type, teamId, points, description, raiderId } = payload;
-        
-        const teamA = typeof match.teamA === 'string' ? JSON.parse(match.teamA) : match.teamA;
-        const teamB = typeof match.teamB === 'string' ? JSON.parse(match.teamB) : match.teamB;
-        const teamAId = teamA?.id || 'teamA';
-        const teamBId = teamB?.id || 'teamB';
-        const teamAName = teamA?.name || 'Team A';
-        const teamBName = teamB?.name || 'Team B';
+      const teamA = typeof match.teamA === 'string' ? JSON.parse(match.teamA) : match.teamA;
+      const teamB = typeof match.teamB === 'string' ? JSON.parse(match.teamB) : match.teamB;
+      const teamAId = teamA?.id || 'teamA';
+      const teamBId = teamB?.id || 'teamB';
+      const teamAName = teamA?.name || 'Team A';
+      const teamBName = teamB?.name || 'Team B';
 
+      // Ensure properties are initialized
+      if (state.consecutiveEmptyRaidsA === undefined) state.consecutiveEmptyRaidsA = 0;
+      if (state.consecutiveEmptyRaidsB === undefined) state.consecutiveEmptyRaidsB = 0;
+      if (state.activePlayersA === undefined || state.activePlayersA === null) state.activePlayersA = 7;
+      if (state.activePlayersB === undefined || state.activePlayersB === null) state.activePlayersB = 7;
+      if (!state.raidingTeamId) state.raidingTeamId = teamAId;
+
+      // Auto restore from 0 (All Out) to 7 on the next active scoring action
+      if (action === 'kabaddi_safe_raid' || action === 'kabaddi_points') {
+        if (state.activePlayersA === 0) state.activePlayersA = 7;
+        if (state.activePlayersB === 0) state.activePlayersB = 7;
+      }
+
+      if (action === 'kabaddi_roster_update') {
+        const { teamId, activeCount } = payload;
         if (teamId === teamAId) {
-          if (type === 'raid_success' || type === 'bonus') {
-            state.raidPointsA += points;
-            state.scoreA += points;
-          } else if (type === 'raid_tackled' || type === 'super_tackle') {
-            state.tacklePointsB += points;
-            state.scoreB += points;
-          } else if (type === 'all_out') {
-            state.allOutPointsA += points;
-            state.scoreA += points;
-          } else if (type === 'technical') {
-            state.extraPointsA += points;
-            state.scoreA += points;
-          }
+          state.activePlayersA = Math.max(0, Math.min(7, activeCount));
         } else {
-          if (type === 'raid_success' || type === 'bonus') {
-            state.raidPointsB += points;
-            state.scoreB += points;
-          } else if (type === 'raid_tackled' || type === 'super_tackle') {
-            state.tacklePointsA += points;
-            state.scoreA += points;
-          } else if (type === 'all_out') {
-            state.allOutPointsB += points;
-            state.scoreB += points;
-          } else if (type === 'technical') {
-            state.extraPointsB += points;
-            state.scoreB += points;
+          state.activePlayersB = Math.max(0, Math.min(7, activeCount));
+        }
+        const updated = await db.matches.update(id, {
+          kabaddiState: state
+        });
+        return NextResponse.json(updated);
+      }
+
+      if (action === 'kabaddi_safe_raid') {
+        const activeTeamId = state.raidingTeamId || teamAId;
+        
+        // Reset raid timer state
+        state.raidTime = 30;
+        state.raidTimerRunning = false;
+        state.superTackle = false;
+        state.raidAudioPlayState = 'stopped';
+
+        if (state.doOrDie) {
+          // Do Or Die raid fails -> Raider OUT, defending team gets +1
+          const actObj = {
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timeRemaining: state.timeRemaining,
+            type: 'raid_tackled' as const,
+            teamId: activeTeamId, // Raiding team is tackled
+            points: 1,
+            description: `Do-Or-Die Raid failed by ${activeTeamId === teamAId ? teamAName : teamBName}`
+          };
+          applyActionToState(state, actObj, teamAId, teamBId, teamAName, teamBName);
+          actions.push(actObj);
+          
+          state.activeAnimation = { type: 'safe_raid', timestamp: Date.now() };
+        } else {
+          // Standard empty raid
+          const actObj = {
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timeRemaining: state.timeRemaining,
+            type: 'raid_empty' as const,
+            teamId: activeTeamId,
+            points: 0,
+            description: `Safe Raid completed by ${activeTeamId === teamAId ? teamAName : teamBName}`
+          };
+          applyActionToState(state, actObj, teamAId, teamBId, teamAName, teamBName);
+          actions.push(actObj);
+
+          state.activeAnimation = { type: 'safe_raid', timestamp: Date.now() };
+        }
+
+        // Apply auto All-Out check if active players reached 0
+        checkAndApplyAutoAllOut(state, actions, teamAId, teamBId, teamAName, teamBName);
+
+        // Update Animation if Do-Or-Die is active for next turn
+        if (state.doOrDie) {
+          state.activeAnimation = { type: 'do_or_die', timestamp: Date.now() };
+        }
+
+        const updated = await db.matches.update(id, {
+          kabaddiState: state,
+          kabaddiActions: actions
+        });
+        return NextResponse.json(updated);
+      }
+
+      if (action === 'kabaddi_points') {
+        const { type: inputType, teamId, points: inputPoints, description, raiderId } = payload;
+        let type = inputType;
+        let points = inputPoints;
+
+        // 1. Validate bonus rules
+        if (type === 'bonus') {
+          const defendingPlayersCount = (teamId === teamAId) ? state.activePlayersB : state.activePlayersA;
+          if (defendingPlayersCount === undefined || defendingPlayersCount < 6) {
+            return NextResponse.json({ error: 'Bonus is disabled: fewer than 6 defenders on court' }, { status: 400 });
           }
+        }
+
+        // 2. Auto-detect Super Tackle
+        if (type === 'raid_tackled') {
+          const defendingPlayersCount = (teamId === teamAId) ? state.activePlayersB : state.activePlayersA;
+          if (defendingPlayersCount !== undefined && defendingPlayersCount <= 3) {
+            type = 'super_tackle';
+            points = 2;
+          }
+        }
+
+        // 3. Reset raid timer state (except technical)
+        if (type !== 'technical') {
+          state.raidTime = 30;
+          state.raidTimerRunning = false;
+          state.superTackle = (type === 'super_tackle');
+          state.raidAudioPlayState = 'stopped';
         }
 
         if (raiderId) {
           state.activeRaiderId = raiderId;
         }
 
-        // Add action to history log
-        actions.push({
+        // 4. Apply action
+        const actObj = {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           timeRemaining: state.timeRemaining,
-          type,
+          type: type as any,
           teamId,
           points,
-          description: description || `Points added: +${points} to ${teamId === teamAId ? teamAName : teamBName}`
-        });
+          description: description || `${type.replace('_', ' ').toUpperCase()} +${points} to ${teamId === teamAId ? teamAName : teamBName}`
+        };
+        applyActionToState(state, actObj, teamAId, teamBId, teamAName, teamBName);
+        actions.push(actObj);
 
-        // Reset raid state on points scored
-        state.raidTime = 30;
-        state.raidTimerRunning = false;
-        state.doOrDie = false;
-        state.superTackle = false;
-        state.raidAudioPlayState = 'stopped';
+        // 5. Handle Animations
+        if (type === 'raid_success') {
+          if (points >= 3) {
+            state.activeAnimation = { type: 'super_raid', timestamp: Date.now() };
+          } else {
+            state.activeAnimation = { type: 'safe_raid', timestamp: Date.now() };
+          }
+        } else if (type === 'super_tackle') {
+          state.activeAnimation = { type: 'super_tackle', timestamp: Date.now() };
+        } else if (type === 'all_out') {
+          state.activeAnimation = { type: 'all_out', timestamp: Date.now() };
+        } else if (type === 'bonus') {
+          state.activeAnimation = { type: 'safe_raid', timestamp: Date.now() };
+        }
 
-        // Apply back
+        // 6. Check for Auto All-Out
+        checkAndApplyAutoAllOut(state, actions, teamAId, teamBId, teamAName, teamBName);
+
+        // 7. Update Animation if Do-Or-Die is active for next turn
+        if (state.doOrDie) {
+          state.activeAnimation = { type: 'do_or_die', timestamp: Date.now() };
+        }
+
         const updated = await db.matches.update(id, {
           kabaddiState: state,
           kabaddiActions: actions
@@ -485,8 +765,13 @@ export async function POST(
       }
 
       if (action === 'kabaddi_raid_state') {
-        const { raidTime, raidTimerRunning, doOrDie, superTackle } = payload;
-        if (raidTime !== undefined) state.raidTime = raidTime;
+        const { raidTime, raidTimerRunning, doOrDie, superTackle, raidingTeamId, stadiumAmbience } = payload;
+        if (raidTime !== undefined) {
+          state.raidTime = raidTime;
+          if (raidTime === 0) {
+            state.activeAnimation = { type: 'timeout', timestamp: Date.now() };
+          }
+        }
         if (raidTimerRunning !== undefined) {
           state.raidTimerRunning = raidTimerRunning;
           if (raidTimerRunning) {
@@ -503,6 +788,8 @@ export async function POST(
         }
         if (doOrDie !== undefined) state.doOrDie = doOrDie;
         if (superTackle !== undefined) state.superTackle = superTackle;
+        if (raidingTeamId !== undefined) state.raidingTeamId = raidingTeamId;
+        if (stadiumAmbience !== undefined) state.stadiumAmbience = stadiumAmbience;
 
         const updated = await db.matches.update(id, { kabaddiState: state });
         return NextResponse.json(updated);
@@ -513,8 +800,11 @@ export async function POST(
           return NextResponse.json(match);
         }
 
-        // Pop last action and rebuild score
-        actions.pop();
+        // Pop last action
+        const popped = actions.pop();
+        if (popped && popped.type === 'all_out' && actions.length > 0) {
+          actions.pop();
+        }
 
         const cleanState: KabaddiState = {
           scoreA: 0,
@@ -527,6 +817,11 @@ export async function POST(
           tacklePointsB: 0,
           allOutPointsB: 0,
           extraPointsB: 0,
+          activePlayersA: 7,
+          activePlayersB: 7,
+          consecutiveEmptyRaidsA: 0,
+          consecutiveEmptyRaidsB: 0,
+          raidingTeamId: teamAId,
           timeRemaining: state.timeRemaining,
           half: state.half,
           timerRunning: false,
@@ -534,42 +829,13 @@ export async function POST(
           raidTimerRunning: false,
           doOrDie: false,
           superTackle: false,
-          raidAudioPlayState: 'stopped'
+          raidAudioPlayState: 'stopped',
+          stadiumAmbience: state.stadiumAmbience
         };
 
-        const teamA = typeof match.teamA === 'string' ? JSON.parse(match.teamA) : match.teamA;
-        const teamAId = teamA?.id || 'teamA';
-
+        // Reapply all remaining actions in order
         for (const act of actions) {
-          if (act.teamId === teamAId) {
-            if (act.type === 'raid_success' || act.type === 'bonus') {
-              cleanState.raidPointsA += act.points;
-              cleanState.scoreA += act.points;
-            } else if (act.type === 'raid_tackled' || act.type === 'super_tackle') {
-              cleanState.tacklePointsB += act.points;
-              cleanState.scoreB += act.points;
-            } else if (act.type === 'all_out') {
-              cleanState.allOutPointsA += act.points;
-              cleanState.scoreA += act.points;
-            } else if (act.type === 'technical') {
-              cleanState.extraPointsA += act.points;
-              cleanState.scoreA += act.points;
-            }
-          } else {
-            if (act.type === 'raid_success' || act.type === 'bonus') {
-              cleanState.raidPointsB += act.points;
-              cleanState.scoreB += act.points;
-            } else if (act.type === 'raid_tackled' || act.type === 'super_tackle') {
-              cleanState.tacklePointsA += act.points;
-              cleanState.scoreA += act.points;
-            } else if (act.type === 'all_out') {
-              cleanState.allOutPointsB += act.points;
-              cleanState.scoreB += act.points;
-            } else if (act.type === 'technical') {
-              cleanState.extraPointsB += act.points;
-              cleanState.scoreB += act.points;
-            }
-          }
+          applyActionToState(cleanState, act, teamAId, teamBId, teamAName, teamBName);
         }
 
         const updated = await db.matches.update(id, {

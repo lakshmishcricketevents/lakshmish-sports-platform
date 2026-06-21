@@ -751,8 +751,29 @@ export default function AdminDashboard() {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText(window.location.origin);
-                            triggerBanner('Registration link copied to clipboard!');
+                            const url = window.location.origin;
+                            const doCopy = () => {
+                              try {
+                                const textArea = document.createElement('textarea');
+                                textArea.value = url;
+                                textArea.style.position = 'fixed';
+                                textArea.style.opacity = '0';
+                                document.body.appendChild(textArea);
+                                textArea.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(textArea);
+                                triggerBanner('Registration link copied to clipboard!');
+                              } catch (err) {
+                                alert('Could not copy link: ' + url);
+                              }
+                            };
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(url)
+                                .then(() => triggerBanner('Registration link copied to clipboard!'))
+                                .catch(() => doCopy());
+                            } else {
+                              doCopy();
+                            }
                           }}
                           className="text-[8px] font-black bg-[#161E34] border border-[#232F52] text-white px-2.5 py-1.5 rounded uppercase tracking-widest hover:bg-[#232F52]"
                         >

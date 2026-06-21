@@ -1,233 +1,82 @@
-# Walkthrough - Lakshmish Cricket Events Platform
+# Professional PKL-Style Kabaddi Rebuild Walkthrough & Layout Customizer
 
-We have successfully developed **Lakshmish Cricket Events**, a premium modern sports live scoring and management platform. Below is a summary of the project architecture, features implemented, and validation results.
-
----
-
-## 1. Accomplished Changes & File Structure
-
-Here is a summary of the newly created files and directories inside the workspace:
-
-### Core Files
-- **[`globals.css`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/globals.css)**: Implemented the premium black-and-gold design tokens (IPL, Cricbuzz, and esports-inspired), glassmorphic layout rules (`.glass-panel`, `.glass-panel-hover`), and custom keyframe animations for the live scoring indicator and gold glows.
-- **[`layout.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/layout.tsx)**: Root Next.js layout configuration implementing the Google Font **Outfit** across all child modules.
-
-### Components & Camera Stream Receiver
-- **[`Navbar.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/components/layout/Navbar.tsx)**: Fully responsive premium header layout featuring glassmorphism accents, active link highlight states, and a mobile hamburger slide-out drawer optimized for ground operators.
-- **[`Footer.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/components/layout/Footer.tsx)**: Dark, minimalist bottom footer showcasing sponsor alignments and copyrights.
-- **[`CameraStreamReceiver.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/components/admin/CameraStreamReceiver.tsx)**: WebRTC stream receiver module. Connects dynamically to the mobile capture browser node, handles ICE candidates swaps, and renders a live, low-latency (<1s) video element grid inside the admin console.
-
-### Database Layer
-- **[`db.ts`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/lib/db.ts)**: Configured a unified database interface. By default, it operates on a local JSON file-based database (`data/local_db.json`) and seeds it with rich, premium mock data (tournaments, rosters, live matches, players, and sponsors). It is also fully wired to connect to a **MongoDB Atlas** database cluster if `MONGODB_URI` is provided in `.env.local`.
-
-### Backend API Routes
-- **[`/api/matches`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/matches/route.ts)**: Matches list retrieval and scheduled fixture registration.
-- **[`/api/matches/[id]`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/matches/[id]/route.ts)**: Live scoring updates processor. Parses runs, boundaries, wickets, extras (cricket), and timer counts, touch-points, tackle points, and all-outs (kabaddi).
-- **[`/api/tournaments`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/tournaments/route.ts)**: Tournament additions, rules settings, and participant team registrations.
-- **[`/api/teams`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/teams/route.ts)**: Franchise creation, budget limits, captain/vice-captain settings.
-- **[`/api/players`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/players/route.ts)**: Player profile cards, base auction values, and stats logs.
-- **[`/api/auction`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/auction/route.ts)**: Place bids, cycle active players, sell players to squads, and track remaining budgets.
-- **[`/api/sponsors`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/sponsors/route.ts)**: Sponsor banner managers.
-- **[`/api/cam/signal`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/cam/signal/route.ts)**: Signalling server for WebRTC handshake swaps.
-- **[`/api/cam/ip`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/cam/ip/route.ts)**: IP Auto-Detection API that resolves the computer's Wi-Fi or Ethernet local network address.
-
-### User & Admin Screens
-- **[`page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/page.tsx)**: Dashboard home screen showing active tournaments, live scores, upcoming matches, leaderboards (Top Scorers, Wicket Takers, Raiders), and sponsor banners.
-- **[`matches/[id]/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/page.tsx)**: Multi-sport live scoreboard showing ball-by-ball narratives, innings summaries, partnership lines, kabaddi score counts, and OBS graphics shortcuts.
-- **[`tournaments/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/tournaments/page.tsx)**: Lists active tournaments.
-- **[`tournaments/[id]/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/tournaments/[id]/page.tsx)**: Displays Standings Points Table (with auto-rank sorting and NRR calculation) and match fixtures.
-- **[`auction/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/auction/page.tsx)**: Live bidding arena showing player profile cards, live bidding status, and franchise purses.
-- **[`admin/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/admin/page.tsx)**: Admin Dashboard protected by administrative passphrase (`admin123`). Now integrates the Camera Connect panel with server IP auto-detection.
-- **[`admin/score/[id]/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/admin/score/[id]/page.tsx)**: Dual-mode live scorer console (runs, extras, wickets, undo, kabaddi touch/bonus, tackle, all-outs, and active timer play/pause buttons).
-- **[`overlay/[id]/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/overlay/[id]/page.tsx)**: Stream overlay lower-third graphic with transparent background and green-screen mode toggler.
-- **[`cam/capture/[token]/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/cam/capture/[token]/page.tsx)**: Mobile camera capture page with controls for camera flipping, mic muting, and connection status reporting.
-- **[`matches/[id]/kabaddi/broadcast/page.tsx`](file:///C:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/kabaddi/broadcast/page.tsx)**: TV Broadcast Scoreboard screen featuring 1920x1080 graphic layout, neon team borders, lion/bull mascots, and real-time synchronized indicators.
+The Lakshmish Sports Platform has been upgraded with a professional Pro Kabaddi League (PKL)-style scoring system, layout presets, a live drag-and-drop editor, Canva-style snap guides, and comprehensive sponsor styling controls. All overlays, templates, and viewports are synchronized in real-time.
 
 ---
 
-## 2. Verification & Validation Checks
+## 🚀 Newly Completed Achievements (Layout Editor & Customizer)
 
-### Build Status
-- Ran `npm run build` using Next.js 16 (Turbopack) and TypeScript.
-- **Result**: `✓ Compiled successfully`. TypeScript type checking passed without warnings. Static page pre-generation complete.
-- **Client Hydration Resolution**: Resolved a client-side deoptimization and page load hydration crash ("blank screen/not visible") in Next.js 16/15 by wrapping all client components reading parameters using `useSearchParams()` (specifically the Broadcast Scoreboard at `/matches/[id]/kabaddi` and the Mobile Camera Capture page at `/cam/capture/[token]`) inside a `<Suspense>` boundary. This ensures that static compilation and dynamic browser hydration complete successfully without throwing runtime errors.
+### 1. Drag & Drop Layout Editor (Phase 1)
+- **Live Interactive Position Control**: Operators can now customize the layouts of:
+  - **Lakshmish Logo**
+  - **Sponsor Card**
+  - **Tournament Banner**
+  - **Match Timer**
+  - **Raid Timer**
+- **Sizing Handles**: Dragging corner handles scales components dynamically between `0.4x` and `2.5x`.
+- **Operator Lock/Unlock Controls**: Added layout control toggles (`🔓 Edit Layout` / `🔒 Layout Locked`) in the scorer dashboard's bottom bar to prevent accidental layout adjustments.
+- **Persistence & Cloud Sync**: Pressing `💾 Save Layout` updates the database (`branding.layout` JSONB coordinate field), syncing layouts instantly to the television broadcast overlays via Supabase. Clicking `🔄 Reset Layout` returns all components back to their original responsive defaults.
 
-### Real-Time Update Model
-- All client pages implement auto-polling intervals (`4000ms` for dashboard, `4000ms` for scoreboards, `3000ms` for auction hub, `2000ms` for OBS overlays, and `1500ms` for WebRTC signallers) querying backend API endpoints. This triggers instantaneous page transitions without forcing browser refreshes.
+### 2. Canva-Style Alignment Snap Guides
+- **Live Guides Rendering**: Dragging items close to key positions displays bright yellow snap alignment guidelines:
+  - **Vertical Center Guide**: Shows when elements align to `50%` center.
+  - **Left Guide**: Shows when elements align to the `2%` left boundary margin.
+  - **Right Guide**: Shows when elements align to the `86%` right boundary margin.
+  - **Top Guide**: Shows when elements align to the `2%` top boundary margin.
+- **Snapping Magnetism**: Automatically snaps components to these critical alignment lines when within `1.5%` proximity, ensuring pixel-perfect layout alignment.
 
----
+### 3. Broadcast Layout Presets (Phase 3)
+One-click layout templates are built directly into the Scorer Console Branding panel:
+- **🏆 Kabaddi Classic**: Standard television placement with timers at the top and logos/sponsor cards in safe areas.
+- **🏆 PKL Style**: Modern Pro Kabaddi League style with match timer and raid timers centered at the bottom of the screen.
+- **🏆 Lakshmish Premium**: High-end minimalist design with optimized safe-zone margins and scale properties.
+- **🏆 LED Wall Mode**: Enlarged logos, badges, and counters tailored for large-screen stadium display.
 
-## 3. Guide to Running the QR Camera Connect System
+### 4. Sponsor Card Customization & Display Modes (Phase 2 & Extra Suggestions)
+The Scorer Control console includes expanded options to customize and frame sponsors:
+- **Sponsor Frame Customization**:
+  - **Circle / Square Toggle**: Frame the sponsor logo inside a circular border or rounded square card container.
+  - **Border Thickness**: Adjustment slider between `1px` and `10px` border thickness.
+  - **Border Color presets**: Color selection circles for **Gold**, **Red**, **Blue**, **Green**, and **Black**, plus a custom color picker.
+  - **Glow Toggles**: Switches a custom neon drop-shadow glow (`ON`/`OFF`) surrounding the sponsor image.
+- **Three Sponsor Display Modes**:
+  - **Type 1: Single Sponsor**: Centered sponsor photo displaying Kannada text `"ಹೆಚ್ಚಿನ ಪ್ರೋತ್ಸಾಹಕರು"`.
+  - **Type 2: Presented By**: Displays the sponsor photo with uppercase header label `"PRESENTED BY"`.
+  - **Type 3: Sponsor Carousel**: Smoothly auto-rotates through all uploaded sponsor logos every 10 seconds.
 
-1. **Start Dev Server**:
-   ```bash
-   npm run dev
-   ```
-2. **Open Admin Console**: Go to `http://localhost:3000/admin` (passphrase: `admin123`).
-3. **Select 'Camera Connect' Tab**: 
-   - Note the **WebRTC Server Configuration** panel.
-   - The server **automatically detects your computer's local Wi-Fi IP address** and populates the Base URL (e.g., `http://10.20.185.229:3000`), meaning QR codes are pre-configured to be network-accessible right out-of-the-box!
-4. **Scan QR Code**: Scan the QR code of **Ground Cam**, **Commentary Cam**, or **Boundary Cam** using your phone.
-5. **Stream Live**: Open the URL on your mobile browser, grant camera/microphone permissions, and select Front/Back camera. The connection status indicator on your phone will change to **LIVE**, and your live camera stream will display instantly in the admin console dashboard with sub-second latency!
-6. **Stability Notes**: We added an ICE Candidate Buffer and try-catch error safety blocks around RTCPeerConnection candidate feeding. If candidates are retrieved before the remote SDP description is completely set, they are safely queued and drained immediately upon SDP transition, preventing WebRTC DOMExceptions and disconnection loops.
-7. **Console Error Cleanup (200 OK instead of 404)**: The signaling API now returns `200 OK` with a `sessionNotFound: true` flag instead of a `404 Not Found` when a camera session has not registered yet. This prevents red HTTP 404 network errors from flooding your browser console.
-8. **Interactive Diagnostics & Log Console**: Added collapsible Diagnostic panels and live scrolling consoles with detailed timestamps to both mobile and admin console pages to make connection monitoring fully transparent.
-9. **Peer Connection Recycling**: The receiver now actively closes and resets old peer connections when a new offer is received, allowing seamless camera-swap and reconnect capability.
+### 5. High-Fidelity Image Crop & Zoom Editor
+- **Interactive Cropper Canvas**: Added a crop button to all uploader slots (Lakshmish Logo, Sponsor Logos, Tournament Logo, backgrounds).
+- **Repositioning & Zoom Tools**: Allows uploading operators to drag the image inside the crop window, zoom via slider (`50%` - `300%`), rotate clockwise/counter-clockwise, and save as a cropped transparent PNG. This guarantees faces and logo icons are centered perfectly on screen.
 
----
+### 6. Premium Floating Championship Title (Redesign)
+- **Zero Heavy Backgrounds**: Completely removed the heavy black rectangle banner and thick yellow border containers.
+- **Presenter & Title Layout**: Floating title setup with a centered sub-header (`LAKSHMISH CRICKET EVENTS PRESENTS`) and a massive, ultra-bold main title (`🏆 ಪರಮೇಶ್ವರ ಕಪ್ 2026 🏆`).
+- **Cinematic Text Design**:
+  - **Metallic Gold Gradient**: Linear gradient overlay running across text from deep bronze gold `#C8860D` to bright gold `#FFD700` and highlighting gold `#FFF4A3`.
+  - **TV Safe Outline**: 2px thick multi-directional text-shadow boundary creating a solid black stroke outline for high-contrast legibility.
+  - **Cinematic Glow & Shadow**: Floating glow pulse transition (`luxury-glow-pulse` animation) shifting drop-shadow widths, combined with a subtle horizontal metallic shine sweep every 6 seconds.
+  - **Dominant Font Scaling**: Enlarged the font size by 200% to `text-[8.2cqh]` to make the championship title the most prominent visual element on LED walls and projectors.
 
-## 4. Guide to Running the TV Broadcast Scoreboard
-
-We separated the **Score Scorer Controller** and the **TV Broadcast Scoreboard** into two distinct modes to match professional tournament setups (projectors, LED walls, or YouTube OBS streaming), and both feature transparent data overlays aligned precisely over the design areas of the new background image:
-
-1. **Admin/Scorer Console (`/matches/[id]/kabaddi`)**:
-   - Acts as the controller. Keep it open on a secondary operator screen.
-   - Displays all scoreboard parameters (names, scores, raid countdowns, match timers, and active do-or-die/super tackle indicators) positioned as transparent overlays directly over the corresponding left/right panels and center graphics built into the stadium background.
-   - Includes the bottom controls toolbar and side settings panel to operate points, timers, halves, and team settings.
-   
-2. **TV Broadcast Screen (`/matches/[id]/kabaddi/broadcast`)**:
-   - Opens a pure graphics scoreboard. Project this view on the stadium LED wall or add it as a browser source inside OBS.
-   - Has absolutely **no buttons, controls, or scrollbars** (fully clean 1920x1080 cinematic overlay mode).
-   - Positions Team A Name, Team B Name, Team A Score, Team B Score, Raid Timer, Match Timer, Do Or Die, and Super Tackle overlays perfectly matching the positions of the background image's left blue card, right red card, center VS emblem, and top/bottom arenas.
-   - Automatically plays synchronized audio alert beeps (ticks, warnings, buzzer) depending on the raid time countdown status.
-   - **How it syncs**: Polls the server match details at a high-speed `1500ms` interval, initiating smooth local intervals for both the Match Clock and Raid Clock when their running states change in the database.
-
----
-
-## 5. Guide to Running the QR-Based Mobile Score Controller
-
-We added a secure, touch-optimized **Mobile Score Controller** to allow scorers to control points and timers directly from their mobile phones.
-
-1. **Access the Scorer QR Code**:
-   - Open the Scorer/Admin Console on the laptop at `http://localhost:3000/matches/[id]/kabaddi`.
-   - Click the **"Mobile Scorer QR"** button in the bottom toolbar. A modal displays with a unique QR code pointing to:
-     `http://[localIp]:3000/matches/[id]/kabaddi/control?token=[controlToken]`
-   
-2. **Open the Controller on Mobile**:
-   - Scan the QR code using a smartphone connected to the same local network.
-   - The Mobile Score Controller will load showing large, touch-friendly scoring grids for both teams, match/raid timers, and play/pause/reset buttons.
-
-3. **Secure Token Authorization**:
-   - The scoreboard API validates the `token` parameter. Unauthenticated attempts without a token return `401 Unauthorized` and block access.
-   - If the match status is changed to `completed` in the database, the token automatically expires, and all future scoring requests return `403 Forbidden` with a "Match has ended" error message.
-
-4. **Scoring Syncing**:
-    - The mobile client polls the server every `2000ms` to sync current scoreboard counts, raid states, and timers.
-    - Points changes (+1 Touch, +1 Bonus, +1 Tackle, +2 Super Tackle, +2 All Out, +1 Technical), undo commands, match clock toggles, and raid timer controls update instantly and reflect on the laptop dashboard and the TV Broadcast screen within 1–2 seconds.
+### 7. Safe Clipboard Copy & Modal Save Feedback
+- **Browser-Safe Copy Fallback**: Built a dynamic `<textarea>` copying fallback to prevent page freezes and browser crashes caused by `navigator.clipboard` being undefined in non-secure HTTP local Wi-Fi connections. This has been updated across the control page, viewer dashboard, admin board, and camera stream receiver.
+- **Save Status Feedback**: Improved the edit details modal to only close when database updates successfully complete. If an update fails, the error message is displayed directly inside the modal rather than closing silently.
 
 ---
 
-## 6. Guide to Supabase Integration
+## 🛠️ Verification & Compilation Metrics
 
-We integrated the Kabaddi Scoreboard with Supabase to provide persistent, cloud-based match scoring data, replacing the need for local-only state updates.
-
-### 1. Database Client Initialization
-- **[`supabase.ts`](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/lib/supabase.ts)**: Configures and initializes the `@supabase/supabase-js` client SDK using `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` variables.
-- Includes a configuration check flag `isSupabaseConfigured` to detect when credentials are empty and fallback safely.
-
-### 2. Relational Mapping & Storage
-- **[`db.ts`](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/lib/db.ts)**: Modified the database layer to automatically run mappers (`mapToDb`/`mapFromDb`) that translate camelCase application objects into snake_case database rows.
-- Saves team information, scores, timers, logs, and action history inside `jsonb` fields (`team_a`, `team_b`, `kabaddi_state`, `kabaddi_actions`, etc.), allowing high-performance updates.
-
-### 3. Realtime Updates Subscription
-- Subscribed client-side screens (**Admin Console**, **TV Broadcast Screen**, and **Mobile Scorer Controller**) to Supabase Realtime changes for the active `matchId` via PostgreSQL change notifications (`postgres_changes` listener).
-- When any scoring console update or mobile action occurs, it is saved instantly to Supabase. This fires a database change notification that immediately triggers the receiver clients to hot-reload `loadMatchData()` with zero polling delay.
-- The default HTTP polling rate has been lowered to a slow safety fallback of 15 seconds when Supabase is configured, drastically reducing API request traffic.
-
-### 4. Graceful Fallback
-- If the credentials are not set in `.env.local`, the server prints a warning message and falls back to reading/writing to the local JSON database (`data/local_db.json`), using standard HTTP polling (1.5s - 4s) ensuring development environments continue running without configuration errors.
-
+1. **TypeScript Type Safety**:
+   - Command: `npx tsc --noEmit`
+   - Status: **PASSED** (0 compilation errors).
+2. **Dev Server Compilations**:
+   - Status: **HEALTHY** (Next.js compiled successfully and hot reloads updated pages with no hydration mismatches).
 
 ---
 
-## 7. Supabase Realtime & Sync Fix (June 2026 Updates)
+## 📋 Database Synchronization Details
 
-To solve the issue where score changes were not reflecting or saving ("no changes always showing"), we implemented a comprehensive database synchronization and realtime subscription update:
+Ensure that Supabase Realtime replication is active on the `matches` table to guarantee overlay sync within 1 second. Run the following in your database console if not already enabled:
 
-### 1. On-Demand Database Syncing
-- **[`db.ts`](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/lib/db.ts)**: Added `supabaseId?: string` to the `Match` interface, which maps and exposes the database UUID (`dbMatch.id`) to the client.
-- Implemented an async helper `syncLocalToSupabase()` that scans the local JSON database for missing records and seeds them into Supabase. This runs automatically inside `db.matches.find()`.
-- Updated `db.matches.findById()` and `db.matches.update()` to automatically detect when a record is missing on Supabase (catching Postgrest error code `PGRST116`). If missing, it immediately syncs the full local JSON match to Supabase as an insertion. This ensures the row is guaranteed to exist before any score modifications are made.
-
-### 2. Table-wide Realtime Subscriptions with Local JS Filtering
-- **Realtime Listener Updates**: Because the database column `id` is a PostgreSQL `uuid` containing a deterministically hashed UUID, while the client pages use string-based IDs (like `m-1781785948696`), the previous realtime subscription filters (`filter: id=eq.${matchId}`) failed to match.
-- Modified all 5 client pages to subscribe to all updates on the `matches` table and filter updates locally in JavaScript:
-  - **[Mobile Scorer Controller](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/kabaddi/control/page.tsx)**
-  - **[TV Broadcast Screen](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/kabaddi/broadcast/page.tsx)**
-  - **[Admin Console](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/kabaddi/page.tsx)**
-  - **[OBS Overlay](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/overlay/[id]/page.tsx)**
-  - **[Match Details Page](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/page.tsx)**
-- The event handlers now check if the event's `originalId` (stored inside `kabaddi_state` or `cricket_state`) matches the current URL ID, or if the update's UUID matches `match.supabaseId`. This bypasses the schema mismatch and restores sub-second realtime synchronization.
-
----
-
-## 8. Mobile Controller Scoring Fix, Custom Timers & Fullscreen Esports Animations (Latest Updates)
-
-We implemented critical bug fixes and stunning visual animations to match the user's latest requests:
-
-### 1. Mobile Score Bug Resolution
-- **Issue**: Clicking red or blue scoring buttons sometimes added score to the blue team instead of the clicked team, and undoing scoring events reconstructed all scores under Team B (Red). This occurred because the `team_a`/`team_b` columns returned from Supabase are strings in certain environments, causing `match.teamA.id` to evaluate as `undefined` (and thus `undefined === undefined` was true, routing all scoring to one side).
-- **Resolution**: 
-  - Modified `mapFromDb` in **[`db.ts`](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/lib/db.ts)** to automatically check and parse stringified JSON columns (`team_a`, `team_b`, `kabaddi_state`, `cricket_state`, `kabaddi_actions`, `ball_by_ball`) into native objects at the source. This ensures clean objects are returned by both the REST API and database wrappers.
-  - Safely parsed `match.teamA` inside the `kabaddi_undo` API handler in **[`route.ts`](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/api/matches/[id]/route.ts)** to resolve the parsed `teamAId` for safe score reconstructions.
-  - Handled fallback parameters on type declarations in the client state.
-
-### 2. Custom Half Timers
-- **First Half & Second Half Timing**: Fully enabled the custom half timers configuration panel. Scorers can now input first-half duration and second-half duration inside the Match Edit configuration panel.
-- **Clock Auto-Reset**: When the period is switched (e.g. from 1st Half to 2nd Half), the match timer automatically pauses and resets the clock to the custom duration configured for the active half.
-
-### 3. Fullscreen Esports Event Animations
-- **High-Impact Overlays**: Built animated fullscreen overlay graphic cards in **[TV Broadcast Screen](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/kabaddi/broadcast/page.tsx)** and **[Admin Console](file:///c:/Users/keert/OneDrive/Desktop/kabaddi/src/app/matches/[id]/kabaddi/page.tsx)**.
-- **Event Triggers**:
-  - **🔥 DO OR DIE**: Triggered when the Do Or Die state changes to active. Pulses in neon warning red warning stripes with Kannada and English overlay texts.
-  - **🛡️ SUPER TACKLE**: Triggered when a Super Tackle starts. Glows in shield ice blue with shield patterns.
-  - **⚡ SUPER RAID**: Triggered when a raider secures 3 or more points in a single raid. Fires a golden stroboscopic strobe rotation animation with scale-in-out effects.
-- **Duration**: Overlays automatically clear after 4-5 seconds via React hooks, providing clean broadcast overlays without requiring operator manual clearing.
-
-
-## 9. Kabaddi Raid Audio System (Latest Updates)
-
-We have successfully integrated a fully synchronized, high-fidelity **Kabaddi Raid Audio System** that enhances the live match experience with automatic background theme songs, beeps, and buzzer alerts.
-
-### 🌟 Key Features & Requirements Met
-1. **Automatic Audio Playback**: Plays the Pro Kabaddi 30-second raid song automatically when a raid is started.
-2. **Synchronized Playback State**: Play, Pause, and Reset commands from the Mobile Controller synchronize the audio playback state (`playing`, `paused`, `stopped`) in real-time to the TV Broadcast, Laptop Admin, and OBS Overlay screens via Supabase.
-3. **Audio-Timer Synchronization**: Audio position (`currentTime`) is mathematically synced to the remaining raid time (`30 - raidTime`), preventing drift between the timer and song.
-4. **Volume Control Panel**: Added localized volume control selectors (**Mute**, **Low**, **Medium**, **High**) to the Laptop Admin Console and TV Broadcast/OBS Screens, saved dynamically in `localStorage`.
-5. **Fail-safe Audio Loading**: Uses the HTML5 Audio API to load the MP3 from Supabase Storage. If the audio fails to load or is blocked by browser autoplay permissions, the raid countdown timer continues normally without interruption.
-6. **Local Synthesized Buzzer & Beeps**: A high-impact buzzer sound is synthesized locally using the browser's Web Audio API. Warning alerts beep when less than 5 seconds remain. The buzzer plays reliably using a React `useEffect` hook monitoring `raidTime === 0`, ensuring exactly one clean buzzer execution across clients.
-7. **No Dual-Audio/Chanting Clutter**: Completely removed the experimental AI text-to-speech chanting loop ("kabaddi kabaddi...") to avoid interference with the premium 30-second raid song audio stream.
-8. **Raid Clock Sync Correction**: Added periodic server database synchronization (every 5 seconds) to the Mobile Controller's local countdown interval. This ensures that the server match details stay updated during a raid even if only the Mobile Controller is open, preventing the timer from resetting or jumping back to 30 seconds during slow-polling events.
-
----
-
-## 10. Laptop Admin Dashboard Refactoring & Timer Synchronization Stabilization (Latest Updates)
-
-We have refactored the Laptop Admin Dashboard (`page.tsx`) to implement the decoupled local state and ownership validation patterns, fully resolving render loops, sync conflicts, and network overhead.
-
-### 🌟 Key Enhancements & Stabilization Measures
-1. **Decoupled Local Timer States**: Match timer states (`timeRemaining` and `timerRunning`) are now decoupled from the main `match` object into local React states, matching the Mobile Controller's structure. This prevents high-frequency updates to the `match` state every second, eliminating rendering cascades and HMR loops.
-2. **State Ownership Refs**: Introduced `isRaidTimerOwnerRef` and `isMatchTimerOwnerRef` on the Admin console. The local clocks only synchronize with the database if the screen is NOT the active owner of that clock. If a screen initiates a timer start/pause/reset, it claims ownership.
-3. **Double-Write Conflict Storm Prevention**: Ticks and sync updates are only POSTed to Supabase when the screen is the active owner. This prevents a "conflict storm" where the Admin Console and the Mobile Controller would concurrently tick and write clock states to the server, solving the unstable database loops.
-4. **Optimized Tournament Data Fetching**: Moved the tournament details fetch API call out of the high-frequency match loading loop. It now executes only once when the page loads or when `match.tournamentId` changes, significantly reducing server requests and network activity.
-5. **Autoplay-Safe Local Buzzer**: When the raid countdown reaches `0`, a local synthesizer triggers a high-impact buzzer.
-6. **Smooth Local/DB Alignment**: When not the owner, the local clocks tick down smoothly with 1s resolution for UI fluidity, and automatically align with the database state if drift exceeds threshold metrics (3 seconds for raid time, 5 seconds for match time).
-7. **Production Grade Build**: Verified that `npx tsc --noEmit` and `npm run build` pass cleanly under Next.js Turbopack, guaranteeing type-safety and bundle compilation stability.
-9. **Automatic 30-Second Raid Reset**: When the raid clock countdown completes (reaches 0), it automatically triggers the buzzer, pauses, and then resets the countdown to 30 seconds after a 1.5-second delay, so the next raid is immediately ready.
-10. **Mobile Audio Disabled**: Removed all HTML5 Audio and Web Audio synthesizer elements from the Mobile Controller interface to prevent loud audio or buzzer interference at the scorer's table.
-
----
-
-## 11. Premium Sports-Tech Homepage Redesign (Latest Updates)
-
-We have completely redesigned the platform's home page (`src/app/page.tsx`) to match the premium, high-impact aesthetic of elite sports platforms like the Indian Premier League (IPL), Pro Kabaddi League (PKL), and Dream11.
-
-### 🌟 Key Redesign & Visual Components
-1. **Live Match Ticker Header**: Built a horizontal scrollable ticker at the top of the viewport. Renders compact, live-updating mini-scorecards for all active fixtures (runs/wickets, targets, overs, active halves, and live scores).
-2. **Cinematic Hero Arena**: Styled a large landing banner using the professional stadium background integrated with a dark overlay, floating golden trophy illustration, spotlight sweep animations, and bold typography.
-3. **Dashboard Metrics Counters**: Displayed 4 golden-themed glassmorphism stats widgets summarizing tournaments, live matches, players, and concluded cups, complete with micro-interaction hover transforms.
-4. **Professional Match Cards**: Redesigned match summary nodes inside the match center, featuring circular team logo badges, bilingual Kannada/English team labels, and visual highlight markers (Target Runs tracker for Cricket, active Period & Clock details for Kabaddi).
-5. **Infinite Sponsors Carousel**: Replaced static logo blocks with an animated scrolling track. Loops sponsor badges horizontally using pure CSS keyframes with cursor pause integration.
-6. **Highlights Reel**: Added a curated "Broadcast Highlights" section displaying video-style cards, play overlays, view/time badges, and descriptions for match events.
-7. **Bilingual Standings & Leaderboards**: Renders MVP Raiders, Wicket Takers, and Batsmen statistics alongside tournament standings in organized glass cards, providing a complete tournament center layout.
-
+```sql
+alter publication supabase_realtime add table matches;
+```
